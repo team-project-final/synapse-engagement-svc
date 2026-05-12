@@ -1,0 +1,15 @@
+package com.synapse.engagement;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.modulith.Modulithic;
+
+@Modulithic
+@SpringBootApplication
+public class EngagementSvcApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(EngagementSvcApplication.class, args);
+	}
+
+}
