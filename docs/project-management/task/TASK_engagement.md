@@ -11,11 +11,11 @@
 
 - **Step Goal**: engagement-owner가 Spring Boot 4 + Modulith 기반 engagement-svc를 생성하여 community/gamification 모듈 골격이 동작한다.
 - **Done When**:
-  - [ ] Spring Boot 4 + Modulith 프로젝트 초기화 완료
-  - [ ] community / gamification 2개 모듈 패키지 구조 생성
-  - [ ] `./gradlew build` 성공
-  - [ ] Modulith 구조 검증 테스트 통과 (`ApplicationModulesTest`)
-  - [ ] Docker 이미지 빌드 성공
+  - [v] Spring Boot 4 + Modulith 프로젝트 초기화 완료
+  - [v] community / gamification 2개 모듈 패키지 구조 생성
+  - [v] `./gradlew build` 성공
+  - [v] Modulith 구조 검증 테스트 통과 (`ApplicationModulesTest`)
+  - [v] Docker 이미지 빌드 성공
 - **Scope**:
   - In Scope:
     - Spring Boot 4 + Modulith 프로젝트 생성
@@ -27,7 +27,7 @@
     - 비즈니스 로직 구현
     - DB 마이그레이션
     - Kafka 이벤트 연동
-- **Input**: 03_아키텍처_정의서 §Modulith 구조, platform-svc 골격 참조
+- **Input**: 03*아키텍처*정의서 §Modulith 구조, platform-svc 골격 참조
 - **Instructions**:
   1. Spring Initializr로 프로젝트 생성 (Spring Boot 4, Java 21, Gradle)
   2. Modulith 의존성 추가 (spring-modulith-starter, spring-modulith-test)
@@ -42,7 +42,7 @@
   - 모듈 간 순환 의존 금지
   - platform-svc와 동일한 빌드 구조 유지
 - **Duration**: 0.5일
-- **RULE Reference**: wiki 03_아키텍처_정의서 §Modulith, wiki 18_기술_스택_정의서
+- **RULE Reference**: wiki 03*아키텍처*정의서 §Modulith, wiki 18*기술*스택\_정의서
 - **Assignee**: @engagement-owner
 - **Reviewer**: @team-lead
 
@@ -90,7 +90,7 @@
   - 한 사용자 최대 10개 그룹 생성 가능
   - Soft delete (deleted_at 컬럼)
 - **Duration**: 1.5일
-- **RULE Reference**: wiki 03_아키텍처_정의서 §REST API 규칙, wiki 09_Git_규칙_정의서 §커밋 컨벤션
+- **RULE Reference**: wiki 03*아키텍처*정의서 §REST API 규칙, wiki 09*Git*규칙\_정의서 §커밋 컨벤션
 - **Assignee**: @engagement-owner
 - **Reviewer**: @team-lead
 
@@ -138,7 +138,7 @@
   - OWNER는 탈퇴 불가 (소유권 이전 후 탈퇴)
   - 강퇴된 멤버는 7일간 재가입 불가
 - **Duration**: 2일
-- **RULE Reference**: wiki 03_아키텍처_정의서 §REST API 규칙, wiki 09_Git_규칙_정의서 §커밋 컨벤션
+- **RULE Reference**: wiki 03*아키텍처*정의서 §REST API 규칙, wiki 09*Git*규칙\_정의서 §커밋 컨벤션
 - **Assignee**: @engagement-owner
 - **Reviewer**: @team-lead
 
@@ -188,7 +188,7 @@
   - 멱등성: event_id 기반 중복 방지
   - XP 적립 지연: 이벤트 수신 후 3초 이내
 - **Duration**: 1.5일
-- **RULE Reference**: wiki 03_아키텍처_정의서 §이벤트 설계, wiki 18_기술_스택_정의서 §Kafka
+- **RULE Reference**: wiki 03*아키텍처*정의서 §이벤트 설계, wiki 18*기술*스택\_정의서 §Kafka
 - **Assignee**: @engagement-owner
 - **Reviewer**: @team-lead
 
@@ -234,7 +234,7 @@
   - 공유 콘텐츠 조회는 인증 불필요 (공개 접근)
   - 복사 시 원본과의 연결 유지 (source_share_id)
 - **Duration**: 1.5일
-- **RULE Reference**: wiki 03_아키텍처_정의서 §REST API 규칙, wiki 09_Git_규칙_정의서 §커밋 컨벤션
+- **RULE Reference**: wiki 03*아키텍처*정의서 §REST API 규칙, wiki 09*Git*규칙\_정의서 §커밋 컨벤션
 - **Assignee**: @engagement-owner
 - **Reviewer**: @team-lead
 
@@ -286,7 +286,7 @@
   - 리더보드 캐시: Redis, TTL 5분
   - 스트릭 리셋: 자정(KST) 기준, 1일 미학습 시 리셋
 - **Duration**: 2일
-- **RULE Reference**: wiki 03_아키텍처_정의서 §게이미피케이션, wiki 18_기술_스택_정의서 §Redis
+- **RULE Reference**: wiki 03*아키텍처*정의서 §게이미피케이션, wiki 18*기술*스택\_정의서 §Redis
 - **Assignee**: @engagement-owner
 - **Reviewer**: @team-lead
 
@@ -330,7 +330,7 @@
   - 스키마 호환성: BACKWARD
   - 이벤트 발행 실패 시 로그 기록 (비즈니스 로직 실패 X)
 - **Duration**: 0.5일
-- **RULE Reference**: wiki 03_아키텍처_정의서 §이벤트 설계, wiki 18_기술_스택_정의서 §Kafka
+- **RULE Reference**: wiki 03*아키텍처*정의서 §이벤트 설계, wiki 18*기술*스택\_정의서 §Kafka
 - **Assignee**: @engagement-owner
 - **Reviewer**: @team-lead
 
@@ -376,7 +376,7 @@
   - 신고 사유: SPAM, INAPPROPRIATE, HARASSMENT, OTHER
   - 관리자 권한(ADMIN role) 필수 (처리 API)
 - **Duration**: 1.5일
-- **RULE Reference**: wiki 03_아키텍처_정의서 §REST API 규칙, wiki 09_Git_규칙_정의서 §커밋 컨벤션
+- **RULE Reference**: wiki 03*아키텍처*정의서 §REST API 규칙, wiki 09*Git*규칙\_정의서 §커밋 컨벤션
 - **Assignee**: @engagement-owner
 - **Reviewer**: @team-lead
 
@@ -426,7 +426,7 @@
   - 이벤트 전달 지연 < 5초
   - 테스트 데이터 자동 정리 (teardown)
 - **Duration**: 1.5일
-- **RULE Reference**: wiki 03_아키텍처_정의서 §테스트 전략, wiki 09_Git_규칙_정의서 §이슈 관리
+- **RULE Reference**: wiki 03*아키텍처*정의서 §테스트 전략, wiki 09*Git*규칙\_정의서 §이슈 관리
 - **Assignee**: @engagement-owner
 - **Reviewer**: @team-lead
 
@@ -470,7 +470,7 @@
   - 수정 시 회귀 방지 (테스트 추가 필수)
   - E2E Happy Path 100% 통과
 - **Duration**: 1.5일
-- **RULE Reference**: wiki 09_Git_규칙_정의서 §이슈 관리, wiki 03_아키텍처_정의서 §테스트 전략
+- **RULE Reference**: wiki 09*Git*규칙*정의서 §이슈 관리, wiki 03*아키텍처\_정의서 §테스트 전략
 - **Assignee**: @engagement-owner
 - **Reviewer**: @team-lead
 
