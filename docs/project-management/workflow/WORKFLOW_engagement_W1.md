@@ -1,7 +1,7 @@
 # WORKFLOW: @engagement-owner — Week 1
 
-> **Task 문서**: [TASK_engagement.md](../task/TASK_engagement.md)  
-> **기간**: 2026-05-12 ~ 2026-05-16  
+> **Task 문서**: [TASK_engagement.md](../task/TASK_engagement.md)
+> **기간**: 2026-05-12 ~ 2026-05-15, 4 영업일
 > **기능개발 Workflow**: [README §7](../README.md)
 
 ---
@@ -84,38 +84,38 @@
 - [ ] 결과 → TASK Constraints 반영
 
 ### 1.4 ERD 설계
-- [ ] groups 테이블 설계 (id, name, description, is_public, owner_id, created_at, updated_at, deleted_at)
-- [ ] 인덱스 설계 (owner_id, is_public)
-- [ ] 관계 정의 (groups.owner_id → users.id FK)
+- [ ] study_groups 테이블 설계 (id, tenant_id, name, description, join_type, owner_user_id, max_members DEFAULT 30, status: active|archived|suspended, avatar_url, created_at, updated_at, deleted_at)
+- [ ] 인덱스 설계 (owner_user_id, join_type)
+- [ ] 관계 정의 (study_groups.owner_user_id → users.id FK)
 - [ ] Duration(final) 갱신
 
 ### 1.5 Security 2차 검토
 - [ ] 민감 정보 암호화: 비해당
 - [ ] Soft Delete 정책: 논리삭제 (deleted_at)
-- [ ] 행 단위 접근 제어: 필요 (수정/삭제 시 owner_id 확인)
+- [ ] 행 단위 접근 제어: 필요 (수정/삭제 시 owner_user_id 확인)
 - [ ] 결과 → TASK Constraints 반영
 
 ### 1.6 DTO / Entity 설계 (API First)
-- [ ] GroupCreateRequest 정의 (name, description, isPublic)
-- [ ] GroupUpdateRequest 정의 (name, description, isPublic)
-- [ ] GroupResponse 정의 (id, name, description, isPublic, ownerId, createdAt)
-- [ ] Group Entity 작성
+- [ ] GroupCreateRequest 정의 (name, description, join_type)
+- [ ] GroupUpdateRequest 정의 (name, description, join_type)
+- [ ] GroupResponse 정의 (id, name, description, join_type, owner_user_id, createdAt, memberCount, myRole, status)
+- [ ] StudyGroup Entity 작성
 - [ ] MapStruct 매퍼 작성
 - [ ] Output Format → TASK 반영
 
 ### 1.7 Repository 구현
-- [ ] GroupRepository 인터페이스 작성
-- [ ] findByOwnerId, countByOwnerId 커스텀 쿼리
+- [ ] StudyGroupRepository 인터페이스 작성
+- [ ] findByOwnerUserId, countByOwnerUserId 커스텀 쿼리
 
 ### 1.8 Service + Test
-- [ ] GroupService 구현 (create, findAll, findById, update, delete)
-- [ ] 소유자 권한 검증 로직 구현
+- [ ] StudyGroupService 구현 (create, findAll, findById, update, delete)
+- [ ] 소유자 권한 검증 로직 구현 (owner_user_id 기반)
 - [ ] 한 사용자 최대 10개 그룹 제한 로직 구현
 - [ ] 단위 테스트 작성 (Mockito)
 - [ ] 테스트 통과 확인
 
 ### 1.9 Controller + Test
-- [ ] GroupController REST API 구현 (5개 엔드포인트)
+- [ ] StudyGroupController REST API 구현 (5개 엔드포인트) — `GET /community/groups`, `POST /community/groups`, `GET /community/groups/{id}`, `PATCH /community/groups/{id}`, `DELETE /community/groups/{id}`
 - [ ] 슬라이스 테스트 (@WebMvcTest)
 - [ ] 401/403 응답 테스트 (미인증, 비소유자)
 - [ ] 통합 테스트 (@SpringBootTest + TestContainers)
@@ -139,27 +139,27 @@
 
 ### 1.2 요구사항 분석
 - [ ] 멤버 초대/가입/승인/탈퇴/강퇴 플로우 분석
-- [ ] 역할 기반 권한 (OWNER, ADMIN, MEMBER) 설계
-- [ ] 멤버 상태 (PENDING, ACTIVE, KICKED) 전이 다이어그램
+- [ ] 역할 기반 권한 (owner, admin, member) 설계
+- [ ] 멤버 상태 (invited, active, banned) 전이 다이어그램
 - [ ] Instructions 초안 → TASK 문서 반영
 
 ### 1.3 Security 1차 검토
 - [ ] 인증 필요 여부: Yes (JWT 인증 필요)
-- [ ] 권한 종류: 역할 기반 (OWNER > ADMIN > MEMBER)
+- [ ] 권한 종류: 역할 기반 (owner > admin > member)
 - [ ] 공개 API 여부: No
 - [ ] 결과 → TASK Constraints 반영
 
 ### 1.4 ERD 설계
-- [ ] group_members 테이블 설계 (id, group_id, user_id, role, status, joined_at)
+- [ ] study_group_members 테이블 설계 (id, tenant_id, group_id, user_id, role, status, joined_at)
 - [ ] 인덱스 설계 (group_id+user_id UNIQUE, status)
-- [ ] 관계 정의 (group_members → groups FK, group_members → users FK)
+- [ ] 관계 정의 (study_group_members → study_groups FK, study_group_members → users FK)
 - [ ] Duration(final) 갱신
 
 ### 1.5 Security 2차 검토
 - [ ] 민감 정보 암호화: 비해당
-- [ ] Soft Delete 정책: 상태 변경 (KICKED) — 물리삭제 아님
+- [ ] Soft Delete 정책: 상태 변경 (banned) — 물리삭제 아님
 - [ ] 행 단위 접근 제어: 필요 (역할별 작업 권한 분리)
-- [ ] 강퇴 멤버 7일간 재가입 불가 정책
+- [ ] 강퇴(banned) 멤버 7일간 재가입 불가 정책
 - [ ] 결과 → TASK Constraints 반영
 
 ### 1.6 DTO / Entity 설계 (API First)
@@ -167,8 +167,8 @@
 - [ ] MemberApproveRequest 정의 (memberId)
 - [ ] MemberResponse 정의 (id, userId, role, status, joinedAt)
 - [ ] GroupMember Entity 작성
-- [ ] MemberRole Enum 작성 (OWNER, ADMIN, MEMBER)
-- [ ] MemberStatus Enum 작성 (PENDING, ACTIVE, KICKED)
+- [ ] MemberRole Enum 작성 (owner, admin, member)
+- [ ] MemberStatus Enum 작성 (invited, active, banned)
 - [ ] MapStruct 매퍼 작성
 - [ ] Output Format → TASK 반영
 
@@ -179,13 +179,13 @@
 ### 1.8 Service + Test
 - [ ] MemberService 구현 (invite, join, approve, leave, kick)
 - [ ] 역할 기반 권한 검증 로직 구현
-- [ ] 공개/비공개 그룹 가입 정책 분기
-- [ ] 강퇴 멤버 7일 재가입 차단 로직
+- [ ] 공개/비공개/초대 그룹 가입 정책 분기 (join_type: open|approval|invite)
+- [ ] 강퇴(banned) 멤버 7일 재가입 차단 로직
 - [ ] 단위 테스트 작성 (Mockito — 역할별 시나리오)
 - [ ] 테스트 통과 확인
 
 ### 1.9 Controller + Test
-- [ ] MemberController REST API 구현 (invite, join, approve, leave/kick, list)
+- [ ] MemberController REST API 구현 (invite, join, approve, leave/kick, list) — `POST /community/groups/{id}/invite`, `POST /community/groups/{id}/join`, `PATCH /community/groups/{id}/join-requests/{uid}` (승인/거부), `DELETE /community/groups/{id}/members/{uid}` (탈퇴/강퇴)
 - [ ] 슬라이스 테스트 (@WebMvcTest)
 - [ ] 401/403 응답 테스트 (미인증, 권한 부족)
 - [ ] 통합 테스트 (역할별 시나리오)
