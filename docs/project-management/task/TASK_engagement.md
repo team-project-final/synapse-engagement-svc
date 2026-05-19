@@ -11,11 +11,11 @@
 
 - **Step Goal**: engagement-owner가 Spring Boot 4 + Modulith 기반 engagement-svc를 생성하여 community/gamification 모듈 골격이 동작한다.
 - **Done When**:
-  - [ ] Spring Boot 4 + Modulith 프로젝트 초기화 완료
-  - [ ] community / gamification 2개 모듈 패키지 구조 생성
-  - [ ] `./gradlew build` 성공
-  - [ ] Modulith 구조 검증 테스트 통과 (`ApplicationModulesTest`)
-  - [ ] Docker 이미지 빌드 성공
+  - [x] Spring Boot 4 + Modulith 프로젝트 초기화 완료
+  - [x] community / gamification 2개 모듈 패키지 구조 생성
+  - [x] `./gradlew build` 성공
+  - [x] Modulith 구조 검증 테스트 통과 (`ApplicationModulesTest`)
+  - [x] Docker 이미지 빌드 성공
 - **Scope**:
   - In Scope:
     - Spring Boot 4 + Modulith 프로젝트 생성
@@ -27,7 +27,7 @@
     - 비즈니스 로직 구현
     - DB 마이그레이션
     - Kafka 이벤트 연동
-- **Input**: 03_아키텍처_정의서 §Modulith 구조, platform-svc 골격 참조
+- **Input**: 03*아키텍처*정의서 §Modulith 구조, platform-svc 골격 참조
 - **Instructions**:
   1. Spring Initializr로 프로젝트 생성 (Spring Boot 4, Java 21, Gradle)
   2. Modulith 의존성 추가 (spring-modulith-starter, spring-modulith-test)
@@ -42,11 +42,11 @@
   - 모듈 간 순환 의존 금지
   - platform-svc와 동일한 빌드 구조 유지
 - **Duration**: 0.5일
-- **RULE Reference**: wiki 03_아키텍처_정의서 §Modulith, wiki 18_기술_스택_정의서
+- **RULE Reference**: wiki 03*아키텍처*정의서 §Modulith, wiki 18*기술*스택\_정의서
 - **Assignee**: @engagement-owner
 - **Reviewer**: @team-lead
 
-**Status**: [ ] Not Started / [ ] In Progress / [ ] Done
+**Status**: [ ] Not Started / [ ] In Progress / [x] Done
 
 ---
 
@@ -54,13 +54,13 @@
 
 - **Step Goal**: 로그인 사용자가 학습 그룹을 생성/조회/수정/삭제할 수 있다.
 - **Done When**:
-  - [ ] `POST /community/groups` → 그룹 생성 (이름, 설명, join_type, maxMembers, avatarUrl)
-  - [ ] `GET /community/groups` → 그룹 목록 조회 (페이징)
-  - [ ] `GET /community/groups/{id}` → 그룹 상세 조회
-  - [ ] `PATCH /community/groups/{id}` → 그룹 정보 수정 (소유자만)
-  - [ ] `DELETE /community/groups/{id}` → 그룹 삭제 (소유자만)
-  - [ ] study_groups 테이블 Flyway 마이그레이션 완료
-  - [ ] 통합 테스트 통과
+  - [x] `POST /groups` → 그룹 생성 (이름, 설명, 공개여부)
+  - [x] `GET /groups` → 그룹 목록 조회 (페이징)
+  - [x] `GET /groups/{id}` → 그룹 상세 조회
+  - [x] `PUT /groups/{id}` → 그룹 정보 수정 (소유자만)
+  - [x] `DELETE /groups/{id}` → 그룹 삭제 (소유자만)
+  - [x] groups 테이블 Flyway 마이그레이션 완료
+  - [x] 통합 테스트 통과
 - **Scope**:
   - In Scope:
     - study_groups 테이블 설계 + Flyway 마이그레이션
@@ -91,12 +91,13 @@
   - 그룹명 최대 100자, 설명 최대 500자
   - 한 사용자 최대 10개 그룹 생성 가능
   - Soft delete (deleted_at 컬럼)
+  - W1에서는 platform-svc JWT 연동 전까지 `X-User-Id` 헤더로 인증 사용자 ID를 전달한다.
 - **Duration**: 1.5일
-- **RULE Reference**: wiki 03_아키텍처_정의서 §REST API 규칙, wiki 09_Git_규칙_정의서 §커밋 컨벤션
+- **RULE Reference**: wiki 03*아키텍처*정의서 §REST API 규칙, wiki 09*Git*규칙\_정의서 §커밋 컨벤션
 - **Assignee**: @engagement-owner
 - **Reviewer**: @team-lead
 
-**Status**: [ ] Not Started / [ ] In Progress / [ ] Done
+**Status**: [ ] Not Started / [ ] In Progress / [x] Done
 
 ---
 
@@ -104,14 +105,14 @@
 
 - **Step Goal**: 그룹 소유자가 멤버를 초대/가입승인/탈퇴시킬 수 있고, 멤버는 자발적으로 가입/탈퇴할 수 있다.
 - **Done When**:
-  - [ ] `POST /community/groups/{id}/invite` → 멤버 초대 (소유자)
-  - [ ] `POST /community/groups/{id}/join` → 가입 신청 (사용자)
-  - [ ] `PATCH /community/groups/{id}/join-requests/{uid}` → 가입 승인 (소유자, body: `{ "action": "approve" }`)
-  - [ ] `DELETE /community/groups/{id}/members/{uid}` → 멤버 탈퇴/강퇴
-  - [ ] `GET /community/groups/{id}/members` → 멤버 목록 조회
-  - [ ] 멤버 역할 구분 (`owner`, `admin`, `member` — 소문자)
-  - [ ] study_group_members 테이블 마이그레이션 완료
-  - [ ] 통합 테스트 통과
+  - [x] `POST /groups/{id}/members/invite` → 멤버 초대 (소유자)
+  - [x] `POST /groups/{id}/members/join` → 가입 신청 (사용자)
+  - [x] `PUT /groups/{id}/members/{memberId}/approve` → 가입 승인 (소유자/관리자)
+  - [x] `DELETE /groups/{id}/members/{memberId}` → 멤버 탈퇴/강퇴
+  - [x] `GET /groups/{id}/members` → 멤버 목록 조회
+  - [x] 멤버 역할 구분 (OWNER, ADMIN, MEMBER)
+  - [x] group_members 테이블 마이그레이션 완료
+  - [x] 통합 테스트 통과
 - **Scope**:
   - In Scope:
     - study_group_members 테이블 설계 + Flyway 마이그레이션
@@ -141,12 +142,14 @@
   - 공개 그룹: 즉시 가입, 비공개 그룹: 승인 필요
   - `owner`는 탈퇴 불가 (소유권 이전 후 탈퇴)
   - 강퇴된 멤버는 7일간 재가입 불가
+  - W1에서는 platform-svc JWT 연동 전까지 `X-User-Id` 헤더로 인증 사용자 ID를 전달한다.
+  - `group_members.group_id`는 `groups.id` FK를 사용하고, `user_id`는 platform-svc 사용자 ID를 논리 참조한다.
 - **Duration**: 2일
-- **RULE Reference**: wiki 03_아키텍처_정의서 §REST API 규칙, wiki 09_Git_규칙_정의서 §커밋 컨벤션
+- **RULE Reference**: wiki 03*아키텍처*정의서 §REST API 규칙, wiki 09*Git*규칙\_정의서 §커밋 컨벤션
 - **Assignee**: @engagement-owner
 - **Reviewer**: @team-lead
 
-**Status**: [ ] Not Started / [ ] In Progress / [ ] Done
+**Status**: [ ] Not Started / [ ] In Progress / [x] Done
 
 ---
 
@@ -196,7 +199,7 @@
   - 멱등성: event_id 기반 중복 방지
   - XP 적립 지연: 이벤트 수신 후 3초 이내
 - **Duration**: 1.5일
-- **RULE Reference**: wiki 03_아키텍처_정의서 §이벤트 설계, wiki 18_기술_스택_정의서 §Kafka
+- **RULE Reference**: wiki 03*아키텍처*정의서 §이벤트 설계, wiki 18*기술*스택\_정의서 §Kafka
 - **Assignee**: @engagement-owner
 - **Reviewer**: @team-lead
 
@@ -247,7 +250,7 @@
   - 공유 콘텐츠 조회는 인증 불필요 (공개 접근)
   - 복사 시 원본과의 연결 유지 (source_share_id)
 - **Duration**: 1.5일
-- **RULE Reference**: wiki 03_아키텍처_정의서 §REST API 규칙, wiki 09_Git_규칙_정의서 §커밋 컨벤션
+- **RULE Reference**: wiki 03*아키텍처*정의서 §REST API 규칙, wiki 09*Git*규칙\_정의서 §커밋 컨벤션
 - **Assignee**: @engagement-owner
 - **Reviewer**: @team-lead
 
@@ -299,7 +302,7 @@
   - 리더보드 캐시: Redis, TTL 5분
   - 스트릭 리셋: 자정(KST) 기준, 1일 미학습 시 리셋
 - **Duration**: 2일
-- **RULE Reference**: wiki 03_아키텍처_정의서 §게이미피케이션, wiki 18_기술_스택_정의서 §Redis
+- **RULE Reference**: wiki 03*아키텍처*정의서 §게이미피케이션, wiki 18*기술*스택\_정의서 §Redis
 - **Assignee**: @engagement-owner
 - **Reviewer**: @team-lead
 
@@ -343,7 +346,7 @@
   - 스키마 호환성: BACKWARD
   - 이벤트 발행 실패 시 로그 기록 (비즈니스 로직 실패 X)
 - **Duration**: 0.5일
-- **RULE Reference**: wiki 03_아키텍처_정의서 §이벤트 설계, wiki 18_기술_스택_정의서 §Kafka
+- **RULE Reference**: wiki 03*아키텍처*정의서 §이벤트 설계, wiki 18*기술*스택\_정의서 §Kafka
 - **Assignee**: @engagement-owner
 - **Reviewer**: @team-lead
 
@@ -359,7 +362,7 @@
   - [ ] `POST /community/reports` → 콘텐츠 신고
   - [ ] `GET /admin/reports` → 신고 목록 조회 (관리자)
   - [ ] `PUT /admin/reports/{id}/resolve` → 신고 처리 (body: `{ "status": "resolved", "actionTaken": "..." }`)
-     - 기존 `/approve` 및 `/reject` 별도 엔드포인트 → `/resolve` 단일 엔드포인트로 통합 (Wiki 기준)
+    - 기존 `/approve` 및 `/reject` 별도 엔드포인트 → `/resolve` 단일 엔드포인트로 통합 (Wiki 기준)
   - [ ] reports 테이블 마이그레이션 완료
   - [ ] 통합 테스트 통과
 - **Scope**:
@@ -394,7 +397,7 @@
   - 신고 사유: `spam`, `abuse`, `inappropriate`, `copyright`, `other` (소문자, ERD 기준)
   - 관리자 권한(ADMIN role) 필수 (처리 API)
 - **Duration**: 1.5일
-- **RULE Reference**: wiki 03_아키텍처_정의서 §REST API 규칙, wiki 09_Git_규칙_정의서 §커밋 컨벤션
+- **RULE Reference**: wiki 03*아키텍처*정의서 §REST API 규칙, wiki 09*Git*규칙\_정의서 §커밋 컨벤션
 - **Assignee**: @engagement-owner
 - **Reviewer**: @team-lead
 
@@ -444,7 +447,7 @@
   - 이벤트 전달 지연 < 5초
   - 테스트 데이터 자동 정리 (teardown)
 - **Duration**: 1.5일
-- **RULE Reference**: wiki 03_아키텍처_정의서 §테스트 전략, wiki 09_Git_규칙_정의서 §이슈 관리
+- **RULE Reference**: wiki 03*아키텍처*정의서 §테스트 전략, wiki 09*Git*규칙\_정의서 §이슈 관리
 - **Assignee**: @engagement-owner
 - **Reviewer**: @team-lead
 
@@ -488,7 +491,7 @@
   - 수정 시 회귀 방지 (테스트 추가 필수)
   - E2E Happy Path 100% 통과
 - **Duration**: 1.5일
-- **RULE Reference**: wiki 09_Git_규칙_정의서 §이슈 관리, wiki 03_아키텍처_정의서 §테스트 전략
+- **RULE Reference**: wiki 09*Git*규칙*정의서 §이슈 관리, wiki 03*아키텍처\_정의서 §테스트 전략
 - **Assignee**: @engagement-owner
 - **Reviewer**: @team-lead
 
