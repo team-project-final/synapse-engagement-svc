@@ -157,53 +157,55 @@
 
 ---
 
-## Step 4: Kafka card.reviewed 이벤트 소비 및 XP 적립
+## Step 4: gamification XP 기초 및 수동 적립 API
 
-- **Step Name**: card.reviewed XP 적립
-- **Step Goal**: 시스템이 card.reviewed Kafka 이벤트를 소비하여 사용자에게 XP를 적립하고, 사용자가 누적 XP를 조회할 수 있다.
+- **Step Name**: XP 적립/조회 기반 구축
+- **Step Goal**: 시스템이 내부 API/서비스 호출로 사용자에게 XP를 적립하고, 사용자가 누적 XP와 XP 이력을 조회할 수 있다.
 - **Done When**:
-  - [ ] Kafka Consumer가 card.reviewed 이벤트 수신
-  - [ ] 이벤트 수신 시 사용자 XP 자동 적립
-  - [ ] xp_events 테이블에 XP 이벤트 이력 저장 + user_profiles_gamification 프로필 갱신
-  - [ ] `GET /gamification/profile` → 누적 XP 조회 (구 `/gamification/xp/me` → Wiki 기준 `/gamification/profile`)
-  - [ ] 중복 이벤트 처리 방지 (멱등성)
-  - [ ] 통합 테스트 통과
+  - [x] 내부 XP 적립 유스케이스가 사용자 XP를 적립
+  - [x] xp_events 테이블에 XP 이벤트 이력 저장 + user_profiles_gamification 프로필 갱신
+  - [x] `GET /gamification/profile` → 누적 XP 조회 (구 `/gamification/xp/me` → Wiki 기준 `/gamification/profile`)
+  - [x] `GET /gamification/xp/history` → XP 적립 이력 조회
+  - [x] 중복 이벤트 처리 방지 (멱등성)
+  - [x] 통합 테스트 통과
 - **Scope**:
   - In Scope:
-    - Kafka Consumer 구현 (card.reviewed 토픽)
     - xp_events 테이블 설계 + Flyway 마이그레이션 (XP 이벤트 로그)
     - user_profiles_gamification 테이블 (누적 XP, 레벨 프로필 저장)
-    - XP 적립 로직 (이벤트 → XP 계산 → 저장)
+    - XP 적립 로직 (요청/내부 호출 → XP 계산 → 저장)
     - 누적 XP 조회 API
-    - 멱등성 처리 (event_id 기반 중복 방지)
-    - 통합 테스트 (Embedded Kafka)
+    - XP 이력 조회 API
+    - 멱등성 처리 (event_id 또는 user_id + event_type + source_id 기반 중복 방지)
+    - 통합 테스트 (Testcontainers)
   - Out of Scope:
+    - 외부 이벤트 소비자 구현 및 토픽 연결 (Step 9로 이연)
     - XP 기반 레벨 시스템 (Step 6)
     - XP 차감/소모
     - XP 부스트/이벤트
-- **Input**: card.reviewed Kafka 이벤트, 사용자 정보, XP 계산 규칙
+- **Input**: 사용자 정보, XP 계산 규칙, source_id/source_type 기반 원본 식별자
 - **Instructions**:
   1. xp_events 테이블 DDL 작성 (id, user_id, xp_amount, event_type, source_id, source_type, event_id, created_at)
      - `event_type`: 이벤트 종류 (예: `card_reviewed`), `source_id`/`source_type`: 이벤트 발생 원본 식별
      - 구 `source_event` 단일 컬럼 → `event_type` + `source_id` + `source_type` 분리
   2. user_profiles_gamification 테이블 DDL 작성 (누적 XP, 레벨, 뱃지 요약 등 프로필)
   3. Flyway 마이그레이션 파일 생성
-  4. Kafka Consumer 구현 (@KafkaListener, card.reviewed 토픽)
-  5. XP 계산 로직 구현 (카드 복습 1회 = 10 XP)
+  4. 내부 XP 적립 유스케이스 구현 (`AddXpCommand` 기반)
+  5. XP 계산 로직 구현 (기본 학습 활동 1회 = 10 XP)
   6. 멱등성 처리 (event_id UNIQUE 제약)
   7. 누적 XP 조회 API 구현 (`GET /gamification/profile`)
-  8. 통합 테스트 작성 (Embedded Kafka + TestContainers)
-- **Output Format**: gamification 모듈 XP 코드 + Kafka Consumer + 테스트 코드
+  8. XP 이력 조회 API 구현 (`GET /gamification/xp/history`)
+  9. 통합 테스트 작성 (Testcontainers)
+- **Output Format**: gamification 모듈 XP 코드 + REST/유스케이스 테스트 코드
 - **Constraints**:
-  - 카드 복습 1회 = 10 XP (고정)
-  - 멱등성: event_id 기반 중복 방지
-  - XP 적립 지연: 이벤트 수신 후 3초 이내
+  - 기본 학습 활동 1회 = 10 XP (고정)
+  - 멱등성: event_id 및 user_id + event_type + source_id 기반 중복 방지
+  - 외부 이벤트 연동은 W4 전까지 구현 범위에서 제외
 - **Duration**: 1.5일
-- **RULE Reference**: wiki 03*아키텍처*정의서 §이벤트 설계, wiki 18*기술*스택\_정의서 §Kafka
+- **RULE Reference**: wiki 03*아키텍처*정의서 §REST API 규칙, wiki 03*아키텍처*정의서 §멱등성
 - **Assignee**: @engagement-owner
 - **Reviewer**: @team-lead
 
-**Status**: [ ] Not Started / [ ] In Progress / [ ] Done
+**Status**: [ ] Not Started / [ ] In Progress / [x] Done
 
 ---
 
@@ -258,7 +260,7 @@
 
 ---
 
-## W3 (2026-05-26 ~ 2026-05-29, 5/25 부처님오신날 제외 — 이벤트 발행자)
+## W3 (2026-05-26 ~ 2026-05-29, 5/25 부처님오신날 제외 — 기능 고도화)
 
 ---
 
@@ -310,43 +312,43 @@
 
 ---
 
-## Step 7: 게이미피케이션 Kafka 이벤트 발행
+## Step 7: 그룹 초대 수락/거절 및 가입 신청 관리
 
-- **Step Name**: gamification 이벤트 발행
-- **Step Goal**: engagement-svc가 gamification.level.up/badge.earned Kafka 이벤트를 발행하여 알림을 트리거한다.
+- **Step Name**: 그룹 멤버십 워크플로우 고도화
+- **Step Goal**: 초대받은 사용자가 초대를 수락/거절할 수 있고, 그룹 관리자가 가입 신청 목록을 조회해 승인/거절할 수 있다.
 - **Done When**:
-  - [ ] 레벨 상승 시 gamification.level.up 이벤트 발행
-  - [ ] 배지 수여 시 gamification.badge.earned 이벤트 발행
-  - [ ] 이벤트 스키마 Schema Registry 등록
-  - [ ] platform-svc notification 모듈에서 이벤트 수신 확인
+  - [ ] `POST /community/groups/{id}/invite/{token}/accept` → 초대 수락
+  - [ ] `POST /community/groups/{id}/invite/{token}/decline` → 초대 거절
+  - [ ] `GET /community/groups/{id}/join-requests` → 가입 신청 목록 조회
+  - [ ] `PATCH /community/groups/{id}/join-requests/{uid}` → 가입 승인/거절
   - [ ] 통합 테스트 통과
 - **Scope**:
   - In Scope:
-    - Kafka Producer 구현 (gamification.level.up, gamification.badge.earned)
-    - Avro 스키마 정의 + Schema Registry 등록
-    - 레벨 상승/배지 수여 시 이벤트 발행 로직
-    - 이벤트 발행 실패 시 재시도
-    - 통합 테스트 (Embedded Kafka)
+    - 초대 토큰 상태 관리 (invited → active/declined)
+    - 가입 신청 목록/승인/거절 API
+    - OWNER/ADMIN 권한 검증
+    - 중복 수락/거절 방지
+    - 통합 테스트
   - Out of Scope:
-    - 알림 발송 로직 (platform-svc 담당)
-    - 이벤트 소싱
-    - 이벤트 버전 관리
-- **Input**: 레벨/배지 로직, Kafka 토픽, Schema Registry
+    - 초대 이메일/푸시 알림
+    - 외부 이벤트 발행 (Step 9로 이연)
+    - 소유권 이전
+- **Input**: group_members 데이터, 초대 token, JWT 인증 사용자, OWNER/ADMIN 권한
 - **Instructions**:
-  1. gamification.level.up Avro 스키마 정의 (userId, newLevel, xp, timestamp)
-  2. gamification.badge.earned Avro 스키마 정의 (userId, badgeId, badgeName, timestamp)
-  3. Schema Registry에 스키마 등록
-  4. Kafka Producer 구현 (KafkaTemplate)
-  5. 레벨 상승 로직에 이벤트 발행 추가 (토픽: gamification.level.up)
-  6. 배지 수여 로직에 이벤트 발행 추가 (토픽: gamification.badge.earned)
-  7. 통합 테스트 작성 (이벤트 발행 검증)
-- **Output Format**: gamification 모듈 Kafka Producer 코드 + Avro 스키마 + 테스트 코드
+  1. 초대 token 컬럼/상태 모델 확인 및 부족 시 마이그레이션 작성
+  2. 초대 수락 API 구현: token 검증 → ACTIVE 전환
+  3. 초대 거절 API 구현: token 검증 → DECLINED 또는 제거 정책 적용
+  4. 가입 신청 목록 조회 API 구현 (PENDING/INVITED 필터)
+  5. 가입 신청 승인/거절 API 구현 (OWNER/ADMIN 권한)
+  6. 중복 처리 및 만료/무효 token 에러 응답 정의
+  7. 통합 테스트 작성
+- **Output Format**: community 멤버십 고도화 코드 + Flyway 마이그레이션 + 테스트 코드
 - **Constraints**:
-  - 이벤트 발행: at-least-once
-  - 스키마 호환성: BACKWARD
-  - 이벤트 발행 실패 시 로그 기록 (비즈니스 로직 실패 X)
+  - 초대 token은 추측 불가능해야 한다.
+  - OWNER/ADMIN만 가입 신청 승인/거절 가능
+  - 동일 사용자의 중복 가입 신청 방지
 - **Duration**: 0.5일
-- **RULE Reference**: wiki 03*아키텍처*정의서 §이벤트 설계, wiki 18*기술*스택\_정의서 §Kafka
+- **RULE Reference**: wiki 03*아키텍처*정의서 §REST API 규칙, wiki 09*Git*규칙\_정의서 §커밋 컨벤션
 - **Assignee**: @engagement-owner
 - **Reviewer**: @team-lead
 
@@ -405,11 +407,55 @@
 
 ---
 
-## W5 (2026-06-08 ~ 2026-06-12 — E2E + 발표 준비)
+## W4 (2026-06-01 ~ 2026-06-05 — Kafka 연동 + 안정화)
 
 ---
 
-## Step 9: 게이미피케이션 전체 플로우 E2E 테스트
+## Step 9: Kafka 이벤트 연동 및 XP 자동 적립 전환
+
+- **Step Name**: Kafka card.reviewed 소비 및 gamification 이벤트 발행
+- **Step Goal**: W2에서 만든 XP 적립 유스케이스를 Kafka `card.reviewed` 소비와 연결하고, 레벨업/배지 수여 이벤트 발행 계약을 확정한다.
+- **Done When**:
+  - [ ] `card.reviewed` Kafka 이벤트 소비 시 XP 적립
+  - [ ] 중복 이벤트 수신 시 XP 중복 적립 방지
+  - [ ] 레벨 상승 시 `gamification.level.up` 이벤트 발행
+  - [ ] 배지 수여 시 `gamification.badge.earned` 이벤트 발행
+  - [ ] EmbeddedKafka 또는 Testcontainers Kafka 통합 테스트 통과
+- **Scope**:
+  - In Scope:
+    - Kafka Consumer 구현 (`card.reviewed`)
+    - Kafka Producer 구현 (`gamification.level.up`, `gamification.badge.earned`)
+    - Avro/JSON Schema 및 토픽 계약 문서화
+    - W2 XP 유스케이스와 consumer 연결
+    - 멱등성/재시도/DLQ 기본 정책
+  - Out of Scope:
+    - platform notification 실제 발송 구현
+    - 이벤트 소싱
+    - 대규모 부하 테스트
+- **Input**: learning-card `card.reviewed` 이벤트, gamification 레벨/배지 로직, Kafka 토픽/Schema Registry
+- **Instructions**:
+  1. `card.reviewed` 이벤트 스키마 확정 (eventId, userId, cardId, reviewedAt)
+  2. `card.reviewed` Consumer 구현 및 W2 `AddXpCommand` 연결
+  3. `gamification.level.up` / `gamification.badge.earned` 이벤트 스키마 작성
+  4. Producer 구현 및 레벨/배지 서비스에 연결
+  5. Kafka 역직렬화/직렬화 설정 및 listener enable 플래그 정리
+  6. 멱등성 테스트와 실패 재시도 정책 검증
+  7. 토픽/스키마/소비자 가이드 문서화
+- **Output Format**: Kafka consumer/producer 코드 + 스키마 문서 + 통합 테스트 코드
+- **Constraints**:
+  - 이벤트 발행/소비는 at-least-once 기준
+  - XP 멱등성은 event_id 및 user_id + event_type + source_id 기준으로 보장
+  - Kafka listener는 로컬 기본 비활성화, 통합 환경에서 명시적으로 활성화
+- **Duration**: 1일
+- **RULE Reference**: wiki 03*아키텍처*정의서 §이벤트 설계, wiki 18*기술*스택\_정의서 §Kafka
+- **Assignee**: @engagement-owner
+- **Reviewer**: @team-lead
+
+**Status**: [ ] Not Started / [ ] In Progress / [ ] Done
+
+---
+
+## Step 10: 게이미피케이션 전체 플로우 E2E 테스트
 
 - **Step Name**: 게이미피케이션 E2E 테스트
 - **Step Goal**: 게이미피케이션 전체 플로우(복습→XP→배지→레벨업→리더보드→알림) E2E가 통과한다.
@@ -455,7 +501,7 @@
 
 ---
 
-## Step 10: 커뮤니티 공유/신고 E2E 테스트 및 P0 버그 수정
+## Step 11: 커뮤니티 공유/신고 E2E 테스트 및 P0 버그 수정
 
 - **Step Name**: 커뮤니티 E2E/P0 버그 수정
 - **Step Goal**: 커뮤니티 공유/신고 플로우 E2E가 통과하고 P0 버그가 모두 수정된다.

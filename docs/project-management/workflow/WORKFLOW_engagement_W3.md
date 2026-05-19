@@ -76,64 +76,65 @@
 
 ---
 
-## Step 7: Kafka 연동 — gamification.level.up / gamification.badge.earned 이벤트 발행
+## Step 7: 그룹 초대 수락/거절 + 가입 신청 관리
 
 ### 1.1 TASK 시작
 - [ ] Step Goal / Done When / Scope / Input 확인
-- [ ] PRD_W3 해당 요구사항 확인 (Kafka 이벤트 발행)
+- [ ] PRD_W3 해당 요구사항 확인 (멤버십 워크플로우 고도화)
 - [ ] Duration 산정 확인
 
 ### 1.2 요구사항 분석
-- [ ] gamification.level.up 이벤트 스키마 정의 (userId, oldLevel, newLevel, xp)
-- [ ] gamification.badge.earned 이벤트 스키마 정의 (userId, badgeId, badgeName, earnedAt)
-- [ ] 이벤트 발행 트리거 시점 정의 (레벨업 시, 배지 수여 시)
+- [ ] 초대 수락/거절 플로우 정의 (token 검증, invited → active/declined)
+- [ ] 가입 신청 목록 조회 요건 정의 (pending/invited 상태 필터)
+- [ ] 가입 승인/거절 권한 정의 (OWNER/ADMIN)
 - [ ] Instructions 초안 → TASK 문서 반영
 
 ### 1.3 Security 1차 검토
-- [ ] Kafka 토픽 ACL 설정 (engagement-svc만 발행 권한)
-- [ ] 이벤트 페이로드 민감정보 미포함 확인
-- [ ] Schema Registry Avro/JSON Schema 등록
+- [ ] 초대 token 추측 방지 및 만료 정책 확인
+- [ ] OWNER/ADMIN 권한 검증
+- [ ] 동일 사용자 중복 가입 신청 방지
 - [ ] 결과 → TASK Constraints 반영
 
-### 1.4 Kafka 토픽 설계
-- [ ] gamification.level.up 토픽 설정 (파티션, 복제, 보존)
-- [ ] gamification.badge.earned 토픽 설정
-- [ ] 이벤트 키 전략 (userId 기반 파티셔닝)
+### 1.4 ERD/API 설계
+- [ ] group_members 초대 token/만료/상태 컬럼 필요 여부 확인
+- [ ] accept/decline API path와 응답 DTO 정의
+- [ ] join-requests 목록/처리 API path와 응답 DTO 정의
 - [ ] Duration(final) 갱신
 
 ### 1.5 Security 2차 검토
-- [ ] 이벤트 중복 발행 방지 (멱등성 Producer 설정)
-- [ ] 이벤트 스키마 버전 관리 (호환성 모드: BACKWARD)
-- [ ] 소비자 측 실패 시 재시도 정책 가이드 제공
+- [ ] token 재사용 방지
+- [ ] 초대 대상자 외 수락/거절 차단
+- [ ] 거절된 가입 신청 재신청 가능 시점 정책 확인
 - [ ] 결과 → TASK Constraints 반영
 
 ### 1.6 DTO / Entity 설계 (API First)
-- [ ] LevelUpEvent DTO 정의 (userId, oldLevel, newLevel, totalXp, occurredAt)
-- [ ] BadgeEarnedEvent DTO 정의 (userId, badgeId, badgeName, occurredAt)
-- [ ] Avro/JSON Schema 작성 → Schema Registry 등록
+- [ ] InviteDecisionResponse DTO 정의
+- [ ] JoinRequestResponse DTO 정의
+- [ ] JoinRequestDecisionRequest DTO 정의 (approve/reject)
 - [ ] Output Format → TASK 반영
 
-### 1.7 Producer 구현
-- [ ] GamificationKafkaProducer 구현 (KafkaTemplate)
-- [ ] publishLevelUp() 메서드 구현
-- [ ] publishBadgeEarned() 메서드 구현
-- [ ] 멱등성 Producer 설정 (enable.idempotence=true)
+### 1.7 Repository 구현
+- [ ] 초대 token 조회 쿼리 추가
+- [ ] 가입 신청 목록 조회 쿼리 추가
+- [ ] 중복 신청 검사 쿼리 재확인
 
 ### 1.8 Service 연동 + Test
-- [ ] LevelService → 레벨업 시 GamificationKafkaProducer.publishLevelUp() 호출
-- [ ] BadgeService → 배지 수여 시 GamificationKafkaProducer.publishBadgeEarned() 호출
-- [ ] 통합 테스트 작성 (EmbeddedKafka)
-- [ ] 이벤트 발행 → 토픽 수신 검증
+- [ ] MemberService 초대 수락/거절 구현
+- [ ] MemberService 가입 신청 승인/거절 구현
+- [ ] 단위/통합 테스트 작성
+- [ ] 권한/중복/만료 token 테스트
 - [ ] 테스트 통과 확인
 
-### 1.9 E2E 검증
-- [ ] Docker Compose 환경에서 이벤트 발행 확인
-- [ ] kafka-console-consumer로 이벤트 수신 확인
-- [ ] notification 서비스 연동 테스트 (이벤트 → 알림 발송)
+### 1.9 Controller + Test
+- [ ] POST /community/groups/{id}/invite/{token}/accept
+- [ ] POST /community/groups/{id}/invite/{token}/decline
+- [ ] GET /community/groups/{id}/join-requests
+- [ ] PATCH /community/groups/{id}/join-requests/{uid}
+- [ ] WebMvcTest/통합 테스트 작성
 
 ### 1.10 결과 정리
-- [ ] 이벤트 스키마 문서화
-- [ ] 소비자 가이드 작성 (토픽명, 스키마, 파티션 키)
+- [ ] Swagger API 문서 확인
+- [ ] HISTORY 완료 기록
 - [ ] RULE Reference → TASK 반영
 
 **Step 7 Status**: [ ] Not Started / [ ] In Progress / [ ] Done
@@ -169,7 +170,7 @@
 
 ### 1.5 Security 2차 검토
 - [ ] 신고자 익명성 보장 (신고 대상자에게 신고자 미노출)
-- [ ] 승인 시 콘텐츠 숨김/삭제 처리 + audit 이벤트 발행
+- [ ] 승인 시 콘텐츠 숨김/삭제 처리 + audit 로그 기록
 - [ ] 거부 시 신고 무효 처리 + 사유 기록
 - [ ] 결과 → TASK Constraints 반영
 

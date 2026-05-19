@@ -5,18 +5,18 @@
 | 항목 | 내용 |
 |------|------|
 | 기간 | 2026-05-18 (월) ~ 2026-05-22 (금) |
-| 목표 | SRS 복습 / AI 카드 골격 / Graph + ES / 커뮤니티 공유 / Schema Registry 등록 |
+| 목표 | SRS 복습 / AI 카드 골격 / Graph + ES / 커뮤니티 공유 / XP 적립 API |
 | 전주 결과 | W1에서 4개 서비스 골격 + 기본 CRUD + 인프라 셋업 완료 |
 | GitHub Repositories | [synapse-platform-svc](https://github.com/team-project-final/synapse-platform-svc) · [synapse-engagement-svc](https://github.com/team-project-final/synapse-engagement-svc) · [synapse-knowledge-svc](https://github.com/team-project-final/synapse-knowledge-svc) · [synapse-learning-svc](https://github.com/team-project-final/synapse-learning-svc) · [synapse-frontend](https://github.com/team-project-final/synapse-frontend) · [synapse-shared](https://github.com/team-project-final/synapse-shared) |
 
 ## 2. 기능 요구사항
 
-### 2.1 @team-lead — Kafka + Gateway
+### 2.1 @team-lead — Gateway + W4 이벤트 계약 준비
 
 | ID | 유저 스토리 | 수용 기준 | 우선순위 |
 |----|------------|-----------|----------|
-| FR-TL-101 | 팀장이 Kafka 토픽을 설계하고 생성할 수 있다 | 도메인별 토픽 목록 확정 + Kafka에 토픽 생성 완료 | P0 |
-| FR-TL-102 | Schema Registry에서 BACKWARD 호환성이 글로벌로 강제된다 | 호환성 정책 설정 + 비호환 스키마 등록 거부 확인 | P0 |
+| FR-TL-101 | 팀장이 W4 이벤트 연동 후보를 문서화할 수 있다 | 도메인별 이벤트 후보 목록, 소유자, payload 초안 확정 | P0 |
+| FR-TL-102 | W4 스키마 호환성 정책 초안이 정리된다 | BACKWARD 호환성 기준과 검증 방법 문서화 | P0 |
 | FR-TL-103 | Gateway가 4개 서비스로 라우팅한다 | /notes → knowledge, /cards → learning 등 경로 매핑 동작 | P0 |
 
 ### 2.2 @platform-owner — Billing + Notification 기초
@@ -32,7 +32,7 @@
 
 | ID | 유저 스토리 | 수용 기준 | 우선순위 |
 |----|------------|-----------|----------|
-| FR-EG-101 | 사용자가 학습 활동으로 XP를 적립할 수 있다 | card.reviewed 이벤트 → xp_events 기록 → 누적 XP 조회 | P0 |
+| FR-EG-101 | 사용자가 학습 활동으로 XP를 적립할 수 있다 | 내부 API/서비스 호출 → xp_events 기록 → 누적 XP 조회 | P0 |
 | FR-EG-102 | 사용자가 덱/노트를 share_token으로 공유할 수 있다 | POST /community/shared-decks (덱) 또는 POST /community/shared-notes (노트) → share_token 발행 + 공유 링크 생성 | P0 |
 | FR-EG-103 | 사용자가 공유된 콘텐츠를 검색하고 복사할 수 있다 | GET /community/shared-decks?q=... + POST /community/shared-decks/{id}/copy → 내 덱으로 복사 | P0 |
 
@@ -42,7 +42,7 @@
 |----|------------|-----------|----------|
 | FR-KN-101 | 사용자가 노트 간 백링크를 조회할 수 있다 | GET /notes/{id}/backlinks → 이 노트를 참조하는 노트 목록 | P0 |
 | FR-KN-102 | 사용자가 D3.js 지식 그래프 데이터를 조회할 수 있다 | GET /graph/data → 노드(노트) + 엣지(위키링크) JSON | P0 |
-| FR-KN-103 | 노트 변경 시 Elasticsearch에 자동 동기화된다 | 노트 생성/수정 → Kafka → ES 인덱싱 + 검색 반영 | P0 |
+| FR-KN-103 | 노트 변경 시 Elasticsearch에 동기화된다 | 노트 생성/수정 → 내부 동기화 작업 또는 재인덱싱 API → 검색 반영 | P0 |
 
 ### 2.5 @knowledge-owner-2 — Chunking + BM25
 
@@ -57,7 +57,7 @@
 |----|------------|-----------|----------|
 | FR-LC-101 | 사용자가 복습 세션을 시작하여 오늘 복습할 카드를 받을 수 있다 | GET /reviews/queue → 오늘 복습 대상 카드 큐 반환 | P0 |
 | FR-LC-102 | 사용자가 카드에 난이도(1=Again/2=Hard/3=Good/4=Easy, 정수)를 매기면 다음 복습일이 계산된다 | POST /reviews/sessions/{sessionId}/submit + rating → SM-2 → 다음 복습일 갱신 | P0 |
-| FR-LC-103 | 복습 완료 시 card.reviewed Kafka 이벤트가 발행된다 | 복습 → Kafka card.reviewed 발행 → engagement XP 적립 트리거 | P0 |
+| FR-LC-103 | 복습 완료 결과가 XP 적립 계약에 맞게 저장된다 | 복습 → review result 저장 → engagement XP 적립 API/내부 호출 계약 준비 | P0 |
 | FR-LC-104 | 사용자가 복습 통계(일별 카드 수, 정답률)를 조회할 수 있다 | GET /stats/overview → review_sessions 기반 통계 | P1 |
 
 ### 2.7 @learning-ai-owner — 시맨틱 검색 + AI 카드 골격
@@ -81,8 +81,8 @@
 | ID | 항목 | 기준 |
 |----|------|------|
 | NFR-101 | API 응답 시간 | P95 < 200ms (CRUD), P95 < 2s (AI/검색) |
-| NFR-102 | Kafka 이벤트 지연 | 발행 → 소비 < 5초 |
-| NFR-103 | Schema Registry | 모든 v1 Avro 스키마 등록 + BACKWARD 호환 |
+| NFR-102 | XP 적립 처리 | 요청 처리 후 누적 XP 반영 < 1초 |
+| NFR-103 | 이벤트 연동 준비 | W4 전환을 위해 event_id/source_id 기반 멱등성 확보 |
 | NFR-104 | 검색 품질 | BM25 키워드 검색 상위 10개 관련도 70% 이상 |
 | NFR-105 | 테스트 커버리지 | 신규 코드 80% 이상 |
 
@@ -90,9 +90,9 @@
 
 | From | To | 내용 | 시점 |
 |------|-----|------|------|
-| @team-lead (Kafka) | 전체 | Kafka 토픽 생성 + Schema Registry 정책 | W2 Day 1 |
+| @team-lead (이벤트 계약) | 전체 | W4 이벤트 후보 목록 + 스키마 정책 초안 | W2 Day 1 |
 | @team-lead (Gateway) | 전체 | 서비스별 라우팅 설정 | W2 Day 1-2 |
-| @learning-card-owner | @engagement-owner | card.reviewed 이벤트 → XP 적립 | W2 Day 3~ |
+| @learning-card-owner | @engagement-owner | 복습 완료 결과 → XP 적립 API/내부 호출 계약 | W2 Day 3~ |
 | @knowledge-owner-1 (ES) | @knowledge-owner-2 (검색) | ES 인덱스에 노트 데이터 | W2 Day 2~ |
 | @knowledge-owner-1 (note) | @learning-ai-owner | 노트 데이터 → 임베딩 변환 | W2 Day 3~ |
 
@@ -102,13 +102,13 @@
 - [ ] 덱 공유 → 복사 플로우 동작 (community → learning-card internal API)
 - [ ] 그래프 시각화 기본 동작
 - [ ] 검색(키워드 BM25 + 시맨틱 pgvector) 동작
-- [ ] Schema Registry에 모든 v1 Avro 스키마 등록 + 호환성 검증 통과
+- [ ] XP 적립 API/유스케이스 멱등성 검증 통과
 
 ## 6. 리스크 & 대안
 
 | 리스크 | 영향 | 확률 | 대안 |
 |--------|------|------|------|
-| Kafka 이벤트 연동 지연 | XP 적립 플로우 블로킹 | 중 | REST API 폴백으로 XP 직접 호출 |
+| 외부 이벤트 연동 지연 | XP 자동 적립 플로우 지연 | 중 | W2/W3은 REST/API 기반 적립으로 진행하고 W4에 이벤트 연동 전환 |
 | Stripe 심사 지연 | 결제 테스트 불가 | 중 | Stripe Test Mode로 개발, 실제 결제는 W3 |
 | ES 동기화 누락 | 검색 결과 불일치 | 낮 | 수동 재인덱싱 API 제공 |
 | AI API 비용 초과 | 개발 환경 LLM 호출 제한 | 낮 | 테스트용 Mock 응답 + 일일 호출 한도 설정 |

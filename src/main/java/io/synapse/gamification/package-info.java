@@ -1,2 +1,2 @@
-@org.springframework.modulith.ApplicationModule(displayName = "Gamification", allowedDependencies = { "shared" })
+@org.springframework.modulith.ApplicationModule(displayName = "Gamification", allowedDependencies = { "global" })
 package io.synapse.gamification;

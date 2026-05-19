@@ -1,2 +1,2 @@
-@org.springframework.modulith.ApplicationModule(displayName = "Community", allowedDependencies = { "shared" })
+@org.springframework.modulith.ApplicationModule(displayName = "Community", allowedDependencies = { "global" })
 package io.synapse.community;

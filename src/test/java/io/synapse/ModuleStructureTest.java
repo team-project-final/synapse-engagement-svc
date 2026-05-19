@@ -10,4 +10,3 @@ class ModuleStructureTest {
         ApplicationModules.of(EngagementSvcApplication.class).verify();
     }
 }
-

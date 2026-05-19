@@ -7,6 +7,7 @@ spring:
     locations:
       - classpath:db/migration/community/group
       - classpath:db/migration/community/group/member
+      - classpath:db/migration/gamification/xp
 
 server:
   port: 8080
