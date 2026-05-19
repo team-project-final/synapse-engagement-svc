@@ -1,10 +1,19 @@
-FROM gradle:8.11.1-jdk21 AS builder
-WORKDIR /app
-COPY . .
-RUN ./gradlew bootJar --no-daemon
+FROM eclipse-temurin:21-jdk AS build
+WORKDIR /workspace
+
+COPY gradlew settings.gradle.kts build.gradle.kts ./
+COPY gradle ./gradle
+COPY src ./src
+
+RUN chmod +x ./gradlew && ./gradlew bootJar --no-daemon
 
 FROM eclipse-temurin:21-jre
 WORKDIR /app
-COPY --from=builder /app/build/libs/*.jar app.jar
+
+RUN addgroup --system spring && adduser --system --ingroup spring spring
+USER spring:spring
+
+COPY --from=build /workspace/build/libs/*.jar app.jar
+
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]

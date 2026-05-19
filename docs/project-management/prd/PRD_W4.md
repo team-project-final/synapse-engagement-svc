@@ -5,8 +5,8 @@
 | 항목 | 내용 |
 |------|------|
 | 기간 | 2026-06-01 (월) ~ 2026-06-05 (금) (4 영업일, 6/3 제9회 전국동시지방선거 제외) |
-| 목표 | notification 발송 (FCM/SES) / audit Kafka 소비 / 관리자·Admin 모더레이션 / 통합 검증 |
-| 전주 결과 | W3에서 모든 producer 토픽 발행 + gamification 완성 + 검색 RRF + AI 자동 생성 안정화 |
+| 목표 | Kafka 이벤트 연동 / notification 발송 (FCM/SES) / audit Kafka 소비 / 관리자·Admin 모더레이션 / 통합 검증 |
+| 전주 결과 | W3에서 gamification 완성 + 멤버십 고도화 + 검색 RRF + AI 자동 생성 안정화 |
 | GitHub Repositories | [synapse-platform-svc](https://github.com/team-project-final/synapse-platform-svc) · [synapse-engagement-svc](https://github.com/team-project-final/synapse-engagement-svc) · [synapse-knowledge-svc](https://github.com/team-project-final/synapse-knowledge-svc) · [synapse-learning-svc](https://github.com/team-project-final/synapse-learning-svc) · [synapse-frontend](https://github.com/team-project-final/synapse-frontend) · [synapse-shared](https://github.com/team-project-final/synapse-shared) |
 
 ## 2. 기능 요구사항
@@ -32,8 +32,10 @@
 
 | ID | 유저 스토리 | 수용 기준 | 우선순위 |
 |----|------------|-----------|----------|
-| FR-EG-401 | 사용자가 부적절한 콘텐츠를 신고할 수 있다 | POST /community/reports → 신고 접수 + 관리자 알림 | P1 |
-| FR-EG-402 | 관리자가 신고를 처리할 수 있다 | GET /admin/reports, PUT /admin/reports/{id}/resolve → 신고 목록 + 승인/거부/숨김 | P1 |
+| FR-EG-401 | engagement-svc가 card.reviewed 이벤트를 소비해 XP를 적립한다 | Kafka card.reviewed 수신 → XP 적립 → 중복 이벤트 멱등 처리 | P0 |
+| FR-EG-402 | engagement-svc가 gamification 이벤트를 발행한다 | 레벨업/배지 수여 → gamification.level.up/badge.earned 발행 | P0 |
+| FR-EG-403 | 사용자가 부적절한 콘텐츠를 신고할 수 있다 | POST /community/reports → 신고 접수 + 관리자 알림 | P1 |
+| FR-EG-404 | 관리자가 신고를 처리할 수 있다 | GET /admin/reports, PUT /admin/reports/{id}/resolve → 신고 목록 + 승인/거부/숨김 | P1 |
 
 ### 2.4 @knowledge-owner-1 — 통합 검증 잔무
 
@@ -84,8 +86,9 @@
 
 | From | To | 내용 | 시점 |
 |------|-----|------|------|
-| W3 producer 토픽 | @platform-owner | gamification.level.up / gamification.badge.earned / card.review.due → notification.send 토픽 경유 소비 | W4 Day 1 (W3 종료 직후) |
-| W3 producer 토픽 | @platform-owner | 모든 도메인 이벤트 → audit 소비 | W4 Day 1 |
+| @engagement-owner | @platform-owner | gamification.level.up / gamification.badge.earned → notification.send 토픽 경유 소비 | W4 Day 1~ |
+| @learning-card-owner | @engagement-owner | card.reviewed → XP 적립 | W4 Day 1~ |
+| W4 producer 토픽 | @platform-owner | 모든 도메인 이벤트 → audit 소비 | W4 Day 1~ |
 | @engagement-owner | @platform-owner | 신고 알림 → admin notification | W4 Day 2~ |
 | 전체 서비스 | @team-lead | E2E 시나리오 → 통합 조율 | W4 Day 3~ |
 

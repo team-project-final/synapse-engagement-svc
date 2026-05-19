@@ -9,77 +9,77 @@
 ## Step 4: gamification XP 기초 — xp_events 기록 + XP 조회
 
 ### 4.1 TASK 시작
-- [ ] Step Goal / Done When / Scope / Input 확인
-- [ ] PRD_W2 해당 요구사항 확인 (gamification XP)
-- [ ] Duration 산정 확인
+- [x] Step Goal / Done When / Scope / Input 확인
+- [x] PRD_W2 해당 요구사항 확인 (gamification XP)
+- [x] Duration 산정 확인
 
 ### 4.2 요구사항 분석
-- [ ] XP 이벤트 종류 정의 (card.reviewed, note.created 등)
-- [ ] 이벤트별 XP 부여량 정의
-- [ ] 사용자 총 XP 조회 요건 분석
-- [ ] card.reviewed Kafka 컨슈머 요건 분석
-- [ ] Instructions 초안 → TASK 문서 반영
+- [x] XP 이벤트 종류 정의 (CARD_REVIEWED, NOTE_CREATED)
+- [x] 학습 활동별 XP 부여량 정의 (기본 활동 = 10 XP)
+- [x] 사용자 총 XP 조회 요건 분석
+- [x] 내부 XP 적립 유스케이스 요건 분석
+- [x] Instructions 초안 → TASK 문서 반영
 
 ### 4.3 Security 1차 검토
-- [ ] 인증 필요 여부: Yes (JWT 인증 필요)
-- [ ] 권한 종류: 로그인 사용자 (본인 XP만 조회)
-- [ ] 공개 API 여부: No
-- [ ] Kafka 메시지 위변조 방지 확인
-- [ ] 결과 → TASK Constraints 반영
+- [x] 인증 필요 여부: Yes (JWT 인증 필요, W2 임시 X-User-Id 헤더)
+- [x] 권한 종류: 로그인 사용자 (본인 XP만 조회)
+- [x] 공개 API 여부: No
+- [x] XP 적립 요청 위변조 방지 확인 (서버 사이드 적립 유스케이스 + 멱등성 저장)
+- [x] 결과 → TASK Constraints 반영
 
 ### 4.4 ERD 설계
-- [ ] xp_events 테이블 설계 (id, user_id, event_type, xp_amount, source_id, source_type, created_at)
-- [ ] user_profiles_gamification 테이블 설계 (user_id UNIQUE, total_xp, level, current_streak, longest_streak, updated_at) — 프로필 수준 XP/레벨/스트릭 데이터 관리 (별도 user_streaks 테이블 없음)
-- [ ] 인덱스 설계 (xp_events.user_id, xp_events.created_at, user_profiles_gamification.user_id UNIQUE)
-- [ ] 관계 정의 (xp_events.user_id → user_profiles_gamification.user_id)
-- [ ] Duration(final) 갱신
+- [x] xp_events 테이블 설계 (id, user_id, event_type, xp_amount, source_id, source_type, event_id, created_at)
+- [x] user_profiles_gamification 테이블 설계 (user_id UNIQUE, total_xp, level, current_streak, longest_streak, updated_at) — 프로필 수준 XP/레벨/스트릭 데이터 관리 (별도 user_streaks 테이블 없음)
+- [x] 인덱스 설계 (xp_events.user_id, xp_events.created_at, user_profiles_gamification.user_id UNIQUE)
+- [x] 관계 정의 (xp_events.user_id → user_profiles_gamification.user_id)
+- [x] Duration(final) 갱신
 
 ### 4.5 Security 2차 검토
-- [ ] XP 적립 중복 방지 (idempotency key: event_type + source_id)
-- [ ] Soft Delete 정책: 물리삭제 없음 (이벤트 로그 누적 보관)
-- [ ] 행 단위 접근 제어: 필요 (userId 기반)
-- [ ] 결과 → TASK Constraints 반영
+- [x] XP 적립 중복 방지 (idempotency key: event_id + user_id/event_type/source_id)
+- [x] Soft Delete 정책: 물리삭제 없음 (이벤트 로그 누적 보관)
+- [x] 행 단위 접근 제어: 필요 (userId 기반)
+- [x] 결과 → TASK Constraints 반영
 
 ### 4.6 DTO / Entity 설계 (API First)
-- [ ] XpEventResponse 정의 (eventType, xpAmount, createdAt)
-- [ ] UserXpResponse 정의 — `/gamification/profile` 응답 기준 (level, totalXp, currentStreak, longestStreak, title, nextLevelXp, recentBadges)
-- [ ] XpEvent Entity 작성
-- [ ] UserProfilesGamification Entity 작성
-- [ ] EventType Enum 작성 (CARD_REVIEWED, NOTE_CREATED 등)
-- [ ] MapStruct 매퍼 작성
-- [ ] Output Format → TASK 반영
+- [x] XpEventResponse 정의 (eventType, xpAmount, createdAt)
+- [x] UserXpResponse 정의 — `/gamification/profile` 응답 기준 (level, totalXp, currentStreak, longestStreak, title, nextLevelXp, recentBadges)
+- [x] XpEvent Entity 작성
+- [x] UserProfilesGamification Entity 작성
+- [x] EventType Enum 작성 (CARD_REVIEWED, NOTE_CREATED 등)
+- [x] MapStruct 매퍼 작성
+- [x] Output Format → TASK 반영
 
 ### 4.7 Repository 구현
-- [ ] XpEventRepository 인터페이스 작성
-- [ ] UserProfilesGamificationRepository 인터페이스 작성
-- [ ] findByUserId 커스텀 쿼리
-- [ ] existsByUserIdAndEventTypeAndSourceId 중복 체크 쿼리 (event_type + source_id 기준)
-- [ ] Flyway 마이그레이션 스크립트 작성
+- [x] XpEventRepository 인터페이스 작성
+- [x] UserProfilesGamificationRepository 인터페이스 작성
+- [x] findByUserId 커스텀 쿼리
+- [x] existsByUserIdAndEventTypeAndSourceId 중복 체크 쿼리 (user_id + event_type + source_id 기준)
+- [x] Flyway 마이그레이션 스크립트 작성
 
 ### 4.8 Service + Test
-- [ ] XpService 구현 (addXp, getUserXp, getXpHistory)
-- [ ] XP 적립 서비스 구현 (이벤트 → xp_events 기록 → user_profiles_gamification 갱신)
-- [ ] card.reviewed Kafka Consumer 구현 (KafkaListener)
-- [ ] 중복 적립 방지 로직 (idempotency)
-- [ ] 레벨 계산 로직 (XP → Level 매핑)
-- [ ] 단위 테스트 작성 (Mockito)
-- [ ] Kafka Consumer 테스트 (@EmbeddedKafka)
-- [ ] 테스트 통과 확인
+- [x] GamificationService 구현 (addXp, getProfile, getXpHistory)
+- [x] XP 적립 서비스 구현 (내부 요청 → xp_events 기록 → user_profiles_gamification 갱신)
+- [x] 외부 이벤트 연동은 Step 9로 이연하고 W2는 유스케이스/API 기반으로 제한
+- [x] 중복 적립 방지 로직 (idempotency)
+- [x] 레벨 계산 로직 (XP → Level 매핑)
+- [x] 단위 테스트 작성 (Mockito)
+- [x] Service/Controller 통합 테스트 작성 (Testcontainers)
+- [x] 테스트 통과 확인
 
 ### 4.9 Controller + Test
-- [ ] GET /gamification/profile 엔드포인트 구현 (사용자 XP/레벨/스트릭/배지 프로필 조회)
-- [ ] GET /gamification/xp/history 엔드포인트 구현 (XP 이력 조회)
-- [ ] 슬라이스 테스트 (@WebMvcTest)
-- [ ] 401/403 응답 테스트
-- [ ] 통합 테스트
-- [ ] 테스트 통과 확인
+- [x] GET /gamification/profile 엔드포인트 구현 (사용자 XP/레벨/스트릭/배지 프로필 조회)
+- [x] GET /gamification/xp/history 엔드포인트 구현 (XP 이력 조회)
+- [x] 슬라이스 테스트 (@WebMvcTest)
+- [x] 401/403 응답 테스트
+- [x] 통합 테스트
+- [x] 테스트 통과 확인
 
 ### 4.10 View + Test (해당 시)
-- [ ] Flutter 화면 연동: 해당 없음 (프론트 별도)
-- [ ] Swagger API 문서 확인
-- [ ] RULE Reference → TASK 반영
+- [x] Flutter 화면 연동: 해당 없음 (프론트 별도)
+- [x] Swagger API 문서 확인
+- [x] RULE Reference → TASK 반영
 
-**Step 4 Status**: [ ] Not Started / [ ] In Progress / [ ] Done
+**Step 4 Status**: [ ] Not Started / [ ] In Progress / [x] Done
 
 ---
 
