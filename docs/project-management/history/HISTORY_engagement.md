@@ -22,10 +22,10 @@
 | Step | 내용 | 상태 | 시작일 | 완료일 | 비고 |
 |------|------|------|--------|--------|------|
 | Step 4 | XP 시스템 구현 | Done | 2026-05-19 | 2026-05-19 | XP 적립/조회 유스케이스, 멱등성, Testcontainers 검증 |
-| Step 5 | 공유 기능 API | Not Started | — | — | |
+| Step 5 | 공유 기능 API | Done | 2026-05-20 | 2026-05-20 | share_token, 공유 검색/복사, shared_contents, Testcontainers 검증 |
 | Step 6 | 피드 알고리즘 | Not Started | — | — | |
 
-**W2 진행률**: 1/3 Steps 완료
+**W2 진행률**: 2/3 Steps 완료
 
 ### W3 (2026-05-26 ~ 05-30)
 
@@ -162,9 +162,28 @@
 
 #### 2026-05-20 (화)
 - **완료**:
+  - W2 Step 4 workflow guide 기준으로 gamification XP 조회 API 인증 방식을 재정리했다.
+  - JWT 직접 파싱 구현은 platform-svc 서명 검증/JWK 연동 전까지 보류하고, `GET /api/v1/gamification/profile`, `GET /api/v1/gamification/xp/history`는 기존 `X-User-Id` 임시 헤더를 유지하기로 정리했다.
+  - Step 5의 `share_token`은 공유 링크 식별자이며 로그인 인증용 JWT와 별개임을 확인했다.
+  - W2 Step 4/Step 5 문서를 임시 인증 헤더 + REST + DB 범위로 정리하고, 외부 이벤트 연동 및 알림 연동은 Step 9 전까지 제외하도록 TASK/WORKFLOW에 명시했다.
+  - gamification WebMvc/Testcontainers 테스트를 임시 `X-User-Id` 헤더 기준으로 유지했다.
+  - Step 5 community 공유 기능 API 구현 완료.
+  - workflow guide 기준에 맞춰 `shared_contents` 단일 테이블과 `ContentType(DECK, NOTE)` 모델을 추가했다.
+  - `POST /api/v1/community/share`, `GET /api/v1/community/share/{token}`, `GET /api/v1/community/search`, `POST /api/v1/community/share/{token}/fork`, `DELETE /api/v1/community/share/{id}` 구현.
+  - share_token은 UUID v4 기반 URL-safe 문자열로 생성하고, UNIQUE 제약과 soft delete 기반 무효화 정책을 적용했다.
+  - 공유 등록/복사/삭제는 `X-User-Id` 임시 인증 헤더를 사용하고, 토큰 조회/검색은 공개 API로 구현했다.
+  - 실제 learning-card 복제 연동은 W2 범위에서 제외하고, fork는 공유 메타데이터를 현재 사용자 소유 복사본으로 생성하도록 처리했다.
+  - `SharedContentServiceTest`, `SharedContentControllerWebMvcTest`, `SharedContentControllerIntegrationTest` 추가.
+  - 테스트 실행: `.\gradlew.bat test`.
+  - 테스트 결과: BUILD SUCCESSFUL.
 - **진행 중**:
+  - W2 잔여 작업 범위 확인.
 - **이슈**:
+  - workflow guide에는 JWT 필요 여부가 언급되지만 구체 구현 지시는 없으므로, W2에서는 직접 JWT 파싱/검증을 구현하지 않는다.
+  - platform-svc의 실제 JWT 서명 검증/JWK 연동은 보안 공통 설정이 확정되는 시점에 Resource Server 방식으로 진행한다.
 - **다음**:
+  - Step 5 API 응답 예시와 Swagger 노출을 확인한다.
+  - 외부 이벤트 Producer/Consumer는 Step 9 전까지 추가하지 않는다.
 
 #### 2026-05-21 (수)
 - **완료**:

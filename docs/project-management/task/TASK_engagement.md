@@ -172,13 +172,14 @@
   - In Scope:
     - xp_events 테이블 설계 + Flyway 마이그레이션 (XP 이벤트 로그)
     - user_profiles_gamification 테이블 (누적 XP, 레벨 프로필 저장)
-    - XP 적립 로직 (요청/내부 호출 → XP 계산 → 저장)
+    - XP 적립 로직 (내부 유스케이스 호출 → XP 계산 → 저장)
     - 누적 XP 조회 API
     - XP 이력 조회 API
     - 멱등성 처리 (event_id 또는 user_id + event_type + source_id 기반 중복 방지)
     - 통합 테스트 (Testcontainers)
   - Out of Scope:
-    - 외부 이벤트 소비자 구현 및 토픽 연결 (Step 9로 이연)
+    - 외부 이벤트 연동 및 토픽 연결 (Step 9로 이연)
+    - 서비스 간 이벤트 기반 XP 자동 적립
     - XP 기반 레벨 시스템 (Step 6)
     - XP 차감/소모
     - XP 부스트/이벤트
@@ -197,6 +198,11 @@
   9. 통합 테스트 작성 (Testcontainers)
 - **Output Format**: gamification 모듈 XP 코드 + REST/유스케이스 테스트 코드
 - **Constraints**:
+  - 최종 인증 방식은 JWT가 필요하지만, platform-svc JWT 검증 연동 전까지는 `X-User-Id` 헤더를 임시 인증 수단으로 사용한다
+  - 사용자는 본인 XP/이력만 조회 가능
+  - JWT 직접 파싱/검증 구현은 W2 Step 4 범위에서 보류하고, platform-svc 연동 시 실제 인증 principal 추출 방식으로 교체한다
+  - XP 적립 유스케이스는 후속 입력 경로/내부 호출 재사용을 위해 인증 구현에 직접 의존하지 않는다
+  - 외부 이벤트 연동은 W2 Step 4 범위에서 제외하고 Step 9로 분리한다
   - 기본 학습 활동 1회 = 10 XP (고정)
   - 멱등성: event_id 및 user_id + event_type + source_id 기반 중복 방지
   - 외부 이벤트 연동은 W4 전까지 구현 범위에서 제외
@@ -214,43 +220,46 @@
 - **Step Name**: 공유 토큰 기반 콘텐츠 공유
 - **Step Goal**: 사용자가 덱/노트를 share_token으로 공유하고, 다른 사용자가 공유 콘텐츠를 검색하여 복사할 수 있다.
 - **Done When**:
-  - [ ] `POST /community/shared-decks` → 덱 공유 토큰 생성 / `POST /community/shared-notes` → 노트 공유 토큰 생성
-  - [ ] `GET /community/shared-decks/{id}` → 공유 덱 조회 / `GET /community/shared-notes/{id}` → 공유 노트 조회
-  - [ ] `POST /community/shared-decks/{id}/copy` → 공유 덱 복사
-  - [ ] `GET /community/shared-decks?q=...` → 공유 덱 검색
-  - [ ] shared_decks / shared_notes 테이블 마이그레이션 완료
-  - [ ] 통합 테스트 통과
+  - [x] `POST /api/v1/community/share` → 공유 토큰 생성
+  - [x] `GET /api/v1/community/share/{token}` → 공유 콘텐츠 토큰 조회
+  - [x] `POST /api/v1/community/share/{token}/fork` → 공유 콘텐츠 복사
+  - [x] `GET /api/v1/community/search?q=...` → 공유 콘텐츠 검색
+  - [x] `DELETE /api/v1/community/share/{id}` → 소유자 공유 삭제
+  - [x] shared_contents 테이블 마이그레이션 완료
+  - [x] 통합 테스트 통과
 - **Scope**:
   - In Scope:
-    - shared_decks 테이블 설계 + Flyway 마이그레이션 (덱 공유)
-    - shared_notes 테이블 설계 + Flyway 마이그레이션 (노트 공유)
-    - share_token 생성 API (UUID 기반)
+    - shared_contents 테이블 설계 + Flyway 마이그레이션 (DECK/NOTE 단일 공유 모델)
+    - share_token 생성 API (UUID v4 URL-safe 인코딩 기반)
     - 공유 콘텐츠 조회 API (토큰 기반)
     - 공유 콘텐츠 복사 API
-    - 공유 콘텐츠 검색 API (제목/태그)
+    - 공유 콘텐츠 검색 API (제목/설명/태그)
+    - 공유 콘텐츠 소유자 삭제 API
     - 통합 테스트
   - Out of Scope:
     - 공유 콘텐츠 댓글/평점
     - 공유 만료 정책
     - OpenSearch 기반 검색 (DB LIKE 검색)
+    - 외부 이벤트 발행/소비 및 알림 연동
 - **Input**: 덱/노트 데이터, JWT 인증 토큰, community 모듈
 - **Instructions**:
-  1. shared_decks 테이블 DDL 작성 (id, share_token, shared_by_user_id, title, description, share_type, allow_copy, download_count, rating_avg, rating_count, status, created_at)
-     - `shared_by_user_id`: 공유자 식별 (구 `owner_id` → ERD 기준 `shared_by_user_id`)
-     - share_token 컬럼: 12자리 base62 문자열 생성기 사용
-  2. shared_notes 테이블 DDL 작성 (id, share_token, shared_by_user_id, title, description, share_type, allow_copy, download_count, rating_avg, rating_count, status, created_at)
-  3. Flyway 마이그레이션 파일 생성
-  4. 공유 토큰 생성 API 구현 (`POST /community/shared-decks`, `POST /community/shared-notes`)
-     - share_token: 12자리 base62 문자열 (UUID v4 아님)
-  5. 공유 콘텐츠 조회 API 구현 (ID 기반, 인증 불필요): `GET /community/shared-decks/{id}`, `GET /community/shared-notes/{id}`
-  6. 공유 덱 복사 API 구현: `POST /community/shared-decks/{id}/copy` (인증 필요, 원본 복제)
-  7. 공유 덱 검색 API 구현: `GET /community/shared-decks?q=...` (DB LIKE 검색, 페이징)
-  8. 통합 테스트 작성
+  1. shared_contents 테이블 DDL 작성 (id, owner_id, content_type, content_id, share_token, title, description, tags, download_count, created_at, updated_at, deleted_at)
+  2. share_token UNIQUE, owner_id, content_type, created_at, title/description/tags 검색 인덱스 작성
+  3. Flyway V4 마이그레이션 파일 생성
+  4. 공유 토큰 생성 API 구현: `POST /api/v1/community/share`
+     - share_token: UUID v4 기반 URL-safe 문자열
+  5. 공유 콘텐츠 조회 API 구현 (토큰 기반, 인증 불필요): `GET /api/v1/community/share/{token}`
+  6. 공유 콘텐츠 검색 API 구현: `GET /api/v1/community/search?q=...&contentType=...`
+  7. 공유 콘텐츠 복사 API 구현: `POST /api/v1/community/share/{token}/fork` (인증 필요)
+  8. 공유 콘텐츠 삭제 API 구현: `DELETE /api/v1/community/share/{id}` (소유자만)
+  9. 단위/슬라이스/통합 테스트 작성
 - **Output Format**: community 모듈 공유 코드 + Flyway 마이그레이션 + 테스트 코드
 - **Constraints**:
-  - share_token: 12자리 base62 문자열 (UUID v4 아님 — Wiki 기준)
+  - share_token: UUID v4 기반 URL-safe 인코딩
+  - 공유 등록/복사처럼 인증이 필요한 API는 platform-svc JWT 연동 전까지 `X-User-Id` 임시 헤더를 사용
   - 공유 콘텐츠 조회는 인증 불필요 (공개 접근)
-  - 복사 시 원본과의 연결 유지 (source_share_id)
+  - W2에서는 실제 learning-card 복제 연동 없이 공유 메타데이터 복사본을 생성한다
+  - W2 Step 5까지 외부 이벤트 Producer/Consumer를 추가하지 않는다
 - **Duration**: 1.5일
 - **RULE Reference**: wiki 03*아키텍처*정의서 §REST API 규칙, wiki 09*Git*규칙\_정의서 §커밋 컨벤션
 - **Assignee**: @engagement-owner
@@ -451,7 +460,7 @@
 - **Assignee**: @engagement-owner
 - **Reviewer**: @team-lead
 
-**Status**: [ ] Not Started / [ ] In Progress / [ ] Done
+**Status**: [ ] Not Started / [ ] In Progress / [x] Done
 
 ---
 
