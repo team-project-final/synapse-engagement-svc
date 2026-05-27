@@ -2,7 +2,7 @@ spring:
   application:
     name: engagement-svc
   profiles:
-    active: ${SPRING_PROFILES_ACTIVE:local}
+    active: ${SPRING_PROFILES_ACTIVE:dev}
   flyway:
     locations:
       - classpath:db/migration/community/group
@@ -11,7 +11,7 @@ spring:
       - classpath:db/migration/gamification/xp
 
 server:
-  port: 8080
+  port: 8083
 
 management:
   endpoint:
@@ -22,3 +22,12 @@ management:
     web:
       exposure:
         include: health,info
+
+synapse:
+  jwt:
+    public-key: ${JWT_PUBLIC_KEY:}
+    issuer: ${JWT_ISSUER:synapse-auth}
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p [%thread] %logger{36} - %msg%n"

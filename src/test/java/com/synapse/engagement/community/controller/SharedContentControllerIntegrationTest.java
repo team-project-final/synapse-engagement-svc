@@ -2,6 +2,7 @@ package com.synapse.engagement.community.controller;
 
 import com.synapse.engagement.community.dto.request.ShareContentRequest;
 import com.synapse.engagement.community.entity.ContentType;
+import com.synapse.engagement.support.TestJwt;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -141,6 +142,7 @@ class SharedContentControllerIntegrationTest {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("X-User-Id", userId.toString());
+        headers.setBearerAuth(TestJwt.accessToken(userId.toString()));
         return new HttpEntity<>(body, headers);
     }
 }

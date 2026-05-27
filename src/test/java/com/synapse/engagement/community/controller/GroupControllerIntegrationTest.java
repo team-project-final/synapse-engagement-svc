@@ -15,6 +15,7 @@ import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRe
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import com.synapse.engagement.support.TestJwt;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -169,8 +170,8 @@ class GroupControllerIntegrationTest {
         ResponseEntity<String> response = rest.postForEntity("/api/v1/groups", jsonEntity(request), String.class);
 
         // Then
+        // JWT 보안 적용 후: 토큰 없으면 Spring Security가 401을 반환(커스텀 본문 없음)
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
-        assertThat(response.getBody()).contains("\"code\":\"ENGM-005\"");
     }
 
     @Test
@@ -208,6 +209,7 @@ class GroupControllerIntegrationTest {
     private static HttpEntity<Object> requestEntity(UUID userId, Object body) {
         HttpHeaders headers = jsonHeaders();
         headers.set("X-User-Id", userId.toString());
+        headers.setBearerAuth(TestJwt.accessToken(userId.toString()));
         return new HttpEntity<>(body, headers);
     }
 

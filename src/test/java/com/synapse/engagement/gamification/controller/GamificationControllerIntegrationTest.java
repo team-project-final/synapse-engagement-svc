@@ -1,5 +1,6 @@
 package com.synapse.engagement.gamification.controller;
 
+import com.synapse.engagement.support.TestJwt;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -74,6 +75,7 @@ class GamificationControllerIntegrationTest {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("X-User-Id", userId.toString());
+        headers.setBearerAuth(TestJwt.accessToken(userId.toString()));
         return new HttpEntity<>(null, headers);
     }
 }
