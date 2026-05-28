@@ -1,0 +1,13 @@
+{
+  "type": "record",
+  "name": "GamificationLevelUp",
+  "namespace": "com.synapse.event.engagement",
+  "fields": [
+    {"name": "userId", "type": "long", "default": 0},
+    {"name": "tenantId", "type": "string", "default": ""},
+    {"name": "oldLevel", "type": "int", "default": 0},
+    {"name": "newLevel", "type": "int", "default": 0},
+    {"name": "totalXp", "type": "int", "default": 0},
+    {"name": "occurredAt", "type": {"type": "long", "logicalType": "timestamp-millis"}, "default": 0}
+  ]
+}
