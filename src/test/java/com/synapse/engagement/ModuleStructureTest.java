@@ -7,7 +7,6 @@ class ModuleStructureTest {
 
     @Test
     void verifyModuleStructure() {
-        ApplicationModules.of(EngagementApplication.class).verify();
+        ApplicationModules.of(EngagementSvcApplication.class).verify();
     }
 }
-

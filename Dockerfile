@@ -1,28 +1,13 @@
-# Stage 1: Build
-FROM eclipse-temurin:21-jdk-jammy AS builder
-WORKDIR /app
-
-COPY gradlew .
+FROM eclipse-temurin:21-jdk AS build
+WORKDIR /workspace
+COPY gradlew gradlew
 COPY gradle gradle
-COPY build.gradle.kts .
-COPY settings.gradle.kts .
-
-RUN chmod +x gradlew && ./gradlew dependencies --no-daemon
-
+COPY build.gradle.kts settings.gradle.kts ./
 COPY src src
-RUN ./gradlew clean bootJar --no-daemon
+RUN ./gradlew build --no-daemon
 
-# Stage 2: Runtime
-FROM eclipse-temurin:21-jre-jammy
+FROM eclipse-temurin:21-jre
 WORKDIR /app
-
-RUN addgroup --system app && adduser --system --ingroup app app
-
-COPY --from=builder /app/build/libs/*.jar app.jar
-
-RUN chown app:app app.jar
-USER app
-
+COPY --from=build /workspace/build/libs/*.jar app.jar
 EXPOSE 8080
-
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]

@@ -9,6 +9,13 @@ spring:
       - classpath:db/migration/community/group/member
       - classpath:db/migration/community/share
       - classpath:db/migration/gamification/xp
+  kafka:
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      properties:
+        enable.idempotence: true
+        acks: all
 
 server:
   port: 8083
@@ -27,6 +34,11 @@ synapse:
   jwt:
     public-key: ${JWT_PUBLIC_KEY:}
     issuer: ${JWT_ISSUER:synapse-auth}
+  kafka:
+    enabled: ${KAFKA_ENABLED:false}
+    topics:
+      level-up: ${KAFKA_TOPIC_LEVEL_UP:engagement.gamification.level-up-v1}
+      badge-earned: ${KAFKA_TOPIC_BADGE_EARNED:engagement.gamification.badge-earned-v1}
 
 logging:
   pattern:

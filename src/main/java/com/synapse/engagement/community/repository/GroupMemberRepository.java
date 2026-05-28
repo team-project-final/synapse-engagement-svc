@@ -1,19 +1,32 @@
 package com.synapse.engagement.community.repository;
 
-import com.synapse.engagement.community.entity.GroupMember;
-import com.synapse.engagement.community.entity.GroupMemberStatus;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import com.synapse.engagement.community.domain.GroupMember;
+import com.synapse.engagement.community.domain.MemberStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface GroupMemberRepository extends JpaRepository<GroupMember, UUID> {
+import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
 
-    Optional<GroupMember> findByGroupIdAndUserId(UUID groupId, UUID userId);
+public interface GroupMemberRepository extends JpaRepository<GroupMember, Long> {
+    Optional<GroupMember> findByGroupIdAndUserId(Long groupId, Long userId);
 
-    Optional<GroupMember> findByIdAndGroupId(UUID id, UUID groupId);
+    Optional<GroupMember> findByGroupIdAndInviteToken(Long groupId, String inviteToken);
 
-    List<GroupMember> findByGroupIdAndStatusInOrderByJoinedAtAsc(UUID groupId, Collection<GroupMemberStatus> statuses);
+    Optional<GroupMember> findByIdAndGroupId(Long id, Long groupId);
+
+    List<GroupMember> findByGroupId(Long groupId);
+
+    List<GroupMember> findByGroupIdAndStatus(Long groupId, MemberStatus status);
+
+    List<GroupMember> findByGroupIdAndStatusIn(Long groupId, List<MemberStatus> statuses);
+
+    boolean existsByGroupIdAndUserId(Long groupId, Long userId);
+
+    boolean existsByGroupIdAndUserIdAndStatusAndKickedAtAfter(
+            Long groupId,
+            Long userId,
+            MemberStatus status,
+            Instant kickedAfter
+    );
 }
-

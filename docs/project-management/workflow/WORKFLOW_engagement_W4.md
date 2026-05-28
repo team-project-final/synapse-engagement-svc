@@ -1,8 +1,9 @@
-# WORKFLOW: @engagement-owner — Week 4
+# WORKFLOW: engagement — Week 4
 
 > **Task 문서**: [TASK_engagement.md](../task/TASK_engagement.md)
-> **기간**: 2026-06-01 ~ 2026-06-05, 4 영업일
+> **기간**: 2026-06-01 ~ 2026-06-05
 > **PRD**: [PRD_W4.md](../prd/PRD_W4.md)
+> **Source**: Workflow Dashboard, updated at 2026-05-27T08:33:09.800Z
 
 ---
 
@@ -37,7 +38,7 @@
 - [ ] 토픽/스키마/소비자 가이드 작성
 - [ ] HISTORY 완료 기록
 
-**Step 9 Status**: [ ] Not Started / [ ] In Progress / [ ] Done
+**Step 9 Status**: [x] Not Started / [ ] In Progress / [ ] Done
 
 ---
 
@@ -68,7 +69,7 @@
 - [ ] API 문서 최신화
 - [ ] HISTORY 완료 기록
 
-**Step 10 Status**: [ ] Not Started / [ ] In Progress / [ ] Done
+**Step 10 Status**: [x] Not Started / [ ] In Progress / [ ] Done
 
 ---
 
@@ -99,4 +100,4 @@
 - [ ] API 문서 최신화
 - [ ] HISTORY 완료 기록
 
-**Step 11 Status**: [ ] Not Started / [ ] In Progress / [ ] Done
+**Step 11 Status**: [x] Not Started / [ ] In Progress / [ ] Done

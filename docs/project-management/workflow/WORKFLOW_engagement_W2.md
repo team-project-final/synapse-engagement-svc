@@ -1,8 +1,9 @@
-# WORKFLOW: @engagement-owner — Week 2
+# WORKFLOW: engagement — Week 2
 
 > **Task 문서**: [TASK_engagement.md](../task/TASK_engagement.md)
-> **기간**: 2026-05-18 ~ 2026-05-22, 5 영업일
+> **기간**: 2026-05-19 ~ 2026-05-23
 > **PRD**: [PRD_W2.md](../prd/PRD_W2.md)
+> **Source**: Workflow Dashboard, updated at 2026-05-27T08:33:09.800Z
 
 ---
 
@@ -21,7 +22,7 @@
 - [x] Instructions 초안 → TASK 문서 반영
 
 ### 4.3 Security 1차 검토
-- [x] 인증 필요 여부: Yes (JWT 필요 여부 확인, platform-svc 연동 전까지 W2 임시 X-User-Id 헤더)
+- [x] 인증 필요 여부: Yes (JWT subject 기반 사용자 식별)
 - [x] 권한 종류: 로그인 사용자 (본인 XP만 조회)
 - [x] 공개 API 여부: No
 - [x] XP 적립 요청 위변조 방지 확인 (서버 사이드 적립 유스케이스 + 멱등성 저장)
@@ -68,8 +69,8 @@
 - [x] 테스트 통과 확인
 
 ### 4.9 Controller + Test
-- [x] GET /gamification/profile 엔드포인트 구현 (임시 X-User-Id 기준 사용자 XP/레벨/스트릭/배지 프로필 조회)
-- [x] GET /gamification/xp/history 엔드포인트 구현 (임시 X-User-Id 기준 사용자 XP 이력 조회)
+- [x] GET /gamification/profile 엔드포인트 구현 (JWT subject 기준 사용자 XP/레벨/스트릭/배지 프로필 조회)
+- [x] GET /gamification/xp/history 엔드포인트 구현 (JWT subject 기준 사용자 XP 이력 조회)
 - [x] 슬라이스 테스트 (@WebMvcTest)
 - [x] 401/403 응답 테스트
 - [x] 통합 테스트
@@ -99,7 +100,7 @@
 - [x] Instructions 초안 → TASK 문서 반영
 
 ### 5.3 Security 1차 검토
-- [x] 인증 필요 여부: Yes (공유 등록/복사 시 최종 JWT 필요, platform-svc 연동 전까지 임시 X-User-Id 사용, 검색은 공개 가능)
+- [x] 인증 필요 여부: Yes (공유 등록/복사/삭제는 JWT subject 필요, 검색은 공개 가능)
 - [x] 권한 종류: 로그인 사용자 (본인 콘텐츠만 공유 등록)
 - [x] share_token 만료/무효화 정책 확인 (W2는 만료 없음, soft delete로 무효화)
 - [x] W2 Step 5에서는 외부 이벤트 발행/소비 및 알림 연동 제외
