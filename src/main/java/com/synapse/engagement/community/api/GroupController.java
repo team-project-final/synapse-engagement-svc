@@ -37,6 +37,7 @@ public class GroupController {
             @AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody GroupCreateRequest request
     ) {
+        // 그룹 소유권은 요청 body가 아니라 JWT subject에서만 결정해 IDOR을 막는다.
         return groupService.create(CurrentUser.require(jwt), request);
     }
 
@@ -59,6 +60,7 @@ public class GroupController {
             @PathVariable Long groupId,
             @Valid @RequestBody GroupUpdateRequest request
     ) {
+        // 수정/삭제 권한 검사는 Service의 requireOwner에서 한 번 더 검증한다.
         return groupService.update(groupId, CurrentUser.require(jwt), request);
     }
 

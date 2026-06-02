@@ -9,6 +9,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.List;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -104,7 +106,10 @@ class EngagementApiSmokeTests {
                 .andExpect(jsonPath("$.paths['/api/v1/community/groups/{groupId}/invite/{token}/accept'].post").exists())
                 .andExpect(jsonPath("$.paths['/api/v1/community/groups/{groupId}/invite/{token}/decline'].post").exists())
                 .andExpect(jsonPath("$.paths['/api/v1/community/groups/{groupId}/join-requests'].get").exists())
-                .andExpect(jsonPath("$.paths['/api/v1/community/groups/{groupId}/join-requests/{userId}'].patch").exists());
+                .andExpect(jsonPath("$.paths['/api/v1/community/groups/{groupId}/join-requests/{userId}'].patch").exists())
+                .andExpect(jsonPath("$.paths['/api/v1/community/reports'].post").exists())
+                .andExpect(jsonPath("$.paths['/api/v1/admin/reports'].get").exists())
+                .andExpect(jsonPath("$.paths['/api/v1/admin/reports/{reportId}'].patch").exists());
     }
 
     @Test
@@ -210,7 +215,64 @@ class EngagementApiSmokeTests {
                 .andExpect(jsonPath("$.status").value("PENDING"));
     }
 
+    @Test
+    void step8ReportAndAdminModerationWork() throws Exception {
+        var group = mvc.perform(post("/api/v1/community/groups")
+                        .header("Authorization", bearer("6001"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name":"신고 대상 그룹","description":"bad","isPublic":true}
+                                """))
+                .andExpect(status().isCreated())
+                .andReturn();
+        var groupId = group.getResponse().getContentAsString()
+                .replaceAll(".*\\\"id\\\":([0-9]+).*", "$1");
+
+        mvc.perform(post("/api/v1/community/reports")
+                        .header("Authorization", bearer("6002"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"targetType":"STUDY_GROUP","targetId":%s,"reason":"부적절한 내용"}
+                                """.formatted(groupId)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.status").value("PENDING"));
+
+        mvc.perform(post("/api/v1/community/reports")
+                        .header("Authorization", bearer("6002"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"targetType":"STUDY_GROUP","targetId":%s,"reason":"중복 신고"}
+                                """.formatted(groupId)))
+                .andExpect(status().isConflict());
+
+        mvc.perform(get("/api/v1/admin/reports")
+                        .header("Authorization", bearer("6002")))
+                .andExpect(status().isForbidden());
+
+        var reports = mvc.perform(get("/api/v1/admin/reports")
+                        .header("Authorization", bearer("9001", List.of("ADMIN"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].status").value("PENDING"))
+                .andReturn();
+        var reportId = reports.getResponse().getContentAsString()
+                .replaceAll(".*\\\"id\\\":([0-9]+).*", "$1");
+
+        mvc.perform(patch("/api/v1/admin/reports/" + reportId)
+                        .header("Authorization", bearer("9001", List.of("ADMIN")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"status":"APPROVED","adminNote":"hidden by moderation"}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("APPROVED"))
+                .andExpect(jsonPath("$.adminNote").value("hidden by moderation"));
+    }
+
     private String bearer(String subject) {
         return "Bearer " + TestJwt.accessToken(subject);
+    }
+
+    private String bearer(String subject, List<String> roles) {
+        return "Bearer " + TestJwt.accessToken(subject, roles);
     }
 }

@@ -202,7 +202,7 @@
 - **Title**: Kafka 연동 — gamification.level_up / gamification.badge_earned 이벤트 발행
 - **Owner**: 한승완
 - **Status**: IN_PROGRESS
-- **Current Progress**: Kafka Producer, CloudEvents JSON envelope, Avro schema draft, JWT tenant claim 반영, EmbeddedKafka publish/consume 검증, Docker Compose Kafka 발행/수신 검증, Schema Registry 등록까지 완료했다. Kafka ACL과 notification 서비스 연동 테스트는 아직 남아 있다.
+- **Current Progress**: Kafka Producer를 D-002/EVENT_CONTRACT_STANDARD 기준으로 리팩토링했다. `synapse-shared`의 `com.synapse.engagement.LevelUp` / `BadgeEarned` Avro 스키마를 `src/main/avro/engagement/`에 벤더링하고, Confluent `KafkaAvroSerializer` + Schema Registry 경로로 발행한다. EmbeddedKafka + mock Schema Registry publish/consume, mock notification processor 계약 테스트, Kafka ACL 계약 시뮬레이션은 통과했다. 실제 Kafka ACL 적용과 실제 notification 서비스 연동 테스트는 아직 남아 있다.
 - **Priority**: P0
 - **Step Goal**: engagement-svc가 레벨업과 배지 획득 시 `gamification.level_up`, `gamification.badge_earned` 이벤트를 발행하여 downstream 서비스가 알림/감사 처리를 할 수 있게 한다.
 - **Done When**:
@@ -215,8 +215,8 @@
   - In Scope:
     - `gamification.level_up` Producer
     - `gamification.badge_earned` Producer
-    - userId 기반 파티션 키
-    - CloudEvents envelope 및 Avro/JSON Schema 문서화
+    - tenantId 기반 파티션 키
+    - shared Avro 스키마 및 Schema Registry 문서화
     - Producer 멱등성 설정
   - Out of Scope:
     - `card.reviewed` Consumer
@@ -226,16 +226,19 @@
     - Kafka 토픽 ACL은 engagement-svc 발행 권한만 허용한다
     - 이벤트 페이로드에는 민감 정보를 포함하지 않는다
     - 스키마 호환성은 BACKWARD 모드를 기준으로 한다
-    - CloudEvents envelope에는 `tenantid`, payload에는 `tenantId`를 포함한다
+    - Kafka value는 CloudEvents JSON envelope이 아니라 topic별 bare Avro record다
+    - Avro record에는 공통 메타 `eventId`, `tenantId`, `occurredAt`을 포함한다
     - Producer는 멱등성 설정을 사용한다
   - Output Format:
-    - `LevelUpEvent`: userId, tenantId, oldLevel, newLevel, totalXp, occurredAt
-    - `BadgeEarnedEvent`: userId, tenantId, badgeId, badgeName, occurredAt
+    - `com.synapse.engagement.LevelUp`: eventId, tenantId, userId, newLevel, previousLevel, totalXp, occurredAt
+    - `com.synapse.engagement.BadgeEarned`: eventId, tenantId, userId, badgeId, badgeCode, badgeName, occurredAt
     - Consumer guide: topic, schema, partition key, retry note
   - Verification:
     - Producer publish/consume test: `GamificationKafkaProducerTests`
+    - Mock notification contract test: `GamificationNotificationContractTests`
+    - ACL contract simulation test: `GamificationKafkaAclSimulationTests`
     - Service trigger test: `GamificationStep7EventServiceTests`
-    - Full regression: `./gradlew.bat test` 성공 (2026-05-28)
+    - Full regression: `./gradlew.bat test` 성공 (2026-06-01)
     - Docker Compose Kafka + kafka-console-consumer 수동 확인 성공 (2026-05-28)
     - Schema Registry subjects 등록 성공: `engagement.gamification.level-up-v1-value`, `engagement.gamification.badge-earned-v1-value`
     - Pending manual check: Kafka ACL + notification 서비스 연동
@@ -247,25 +250,42 @@
 - **Task ID**: TASK-EG-008
 - **Title**: community 신고 + Admin 모더레이션
 - **Owner**: 한승완
-- **Status**: TODO
+- **Status**: DONE
+- **Current Progress**: workflow-guide Step 8 기준으로 신고 접수/관리자 처리 API를 구현했다. `reports` 테이블, `PENDING/APPROVED/REJECTED` 상태, 중복 신고 방지, ADMIN role claim 검증, 신고자 미노출 응답, 승인 시 공유 콘텐츠/스터디 그룹 soft delete 처리, WebMvc/Service/Smoke 테스트를 추가했다. `USER` target은 engagement-svc가 계정 데이터를 소유하지 않으므로 신고 상태 승인까지만 처리하고 실제 계정 제재는 platform/auth 영역으로 남긴다.
 - **Priority**: P0
 - **Step Goal**: 사용자가 부적절한 콘텐츠를 신고하고, 관리자가 신고를 조회하여 승인/거부 처리할 수 있다.
 - **Done When**:
-  - [ ] 신고 접수 API 구현
-  - [ ] 관리자 신고 목록 API 구현
-  - [ ] 관리자 신고 처리 API 구현
-  - [ ] 중복 신고 방지 구현
-  - [ ] 403/409 테스트 통과
+  - [x] 신고 접수 API 구현
+  - [x] 관리자 신고 목록 API 구현
+  - [x] 관리자 신고 처리 API 구현
+  - [x] 중복 신고 방지 구현
+  - [x] 403/409 테스트 통과
 - **Scope**:
   - In Scope:
     - `reports` 테이블
-    - target type: shared_deck, shared_note, study_group, user
+    - target type: `SHARED_DECK`, `SHARED_NOTE`, `STUDY_GROUP`, `USER`
     - 신고자 익명성 보장
-    - 콘텐츠 숨김/처리 기록
+    - 콘텐츠 숨김/처리 기록 (`adminNote`, `resolvedAt`)
+    - ADMIN role claim 기반 관리자 API 403 처리
   - Out of Scope:
     - AI 자동 감지
     - 신고자 알림
     - 별도 `community.report.approved` 토픽
+    - shared Avro 계약이 없는 moderation audit Kafka 이벤트
+    - engagement-svc 외부 계정 제재
+  - Constraints:
+    - 신고자는 JWT subject에서만 결정하고 request body로 받지 않는다
+    - 응답에는 `reporterId`를 포함하지 않아 신고 대상자에게 신고자를 노출하지 않는다
+    - 동일 reporter + targetType + targetId 조합은 1회만 허용한다
+    - 관리자 처리는 `APPROVED` 또는 `REJECTED`만 허용하고 이미 처리된 신고는 재처리하지 않는다
+  - Output Format:
+    - `ReportCreateRequest`: targetType, targetId, reason
+    - `ReportModerateRequest`: status, adminNote
+    - `ReportResponse`: id, targetType, targetId, reason, status, adminNote, createdAt, resolvedAt
+  - Verification:
+    - `ReportServiceStep8Tests`: 중복 신고 409, 승인 시 대상 숨김, 거부 처리
+    - `ReportControllerWebMvcTest`: 신고 생성, 403 non-admin, 409 duplicate, 관리자 목록/처리
+    - `EngagementApiSmokeTests`: 신고 생성→중복 방지→비관리자 403→관리자 승인 flow 및 `/v3/api-docs` 노출
 - **Dependencies**: TASK-EG-005
 - **Due Date**: 2026-05-29
 
@@ -286,7 +306,7 @@
 - **Scope**:
   - In Scope:
     - Consumer/Producer 설정
-    - CloudEvents/Avro 규칙 반영
+    - Avro + Schema Registry 규칙 반영
     - DLQ/재처리 정책 문서화
   - Out of Scope:
     - notification 서비스 알림 구현

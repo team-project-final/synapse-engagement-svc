@@ -26,6 +26,10 @@ public final class TestJwt {
     }
 
     public static String accessToken(String subject) {
+        return accessToken(subject, List.of("MEMBER"));
+    }
+
+    public static String accessToken(String subject, List<String> roles) {
         try {
             byte[] der = Base64.getDecoder().decode(PRIVATE_KEY);
             RSAPrivateKey key = (RSAPrivateKey) KeyFactory.getInstance("RSA")
@@ -36,7 +40,7 @@ public final class TestJwt {
                 .issuer("synapse-auth")
                 .issueTime(Date.from(now))
                 .expirationTime(Date.from(now.plusSeconds(900)))
-                .claim("roles", List.of("MEMBER"))
+                .claim("roles", roles)
                 .claim("type", "ACCESS")
                 .build();
             SignedJWT jwt = new SignedJWT(

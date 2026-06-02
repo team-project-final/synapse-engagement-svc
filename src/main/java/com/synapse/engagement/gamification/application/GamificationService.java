@@ -49,6 +49,8 @@ public class GamificationService {
 
     @Transactional
     public UserGamificationResponse addXp(Long userId, String tenantId, AddXpRequest request) {
+        // XP는 외부 이벤트 재전달이나 같은 source 중복 요청이 들어와도 한 번만 적립되어야 한다.
+        // eventId는 Kafka/외부 이벤트 멱등성 키, userId+eventType+sourceId는 도메인 중복 방어선이다.
         if (xpEventRepository.existsByEventId(request.eventId())
                 || xpEventRepository.existsByUserIdAndEventTypeAndSourceId(userId, request.eventType(), request.sourceId())) {
             throw new ConflictException("XP event already processed");
@@ -56,10 +58,12 @@ public class GamificationService {
         var amount = request.xpAmount() == null ? DEFAULT_XP : request.xpAmount();
         var profile = profileRepository.findById(userId)
                 .orElseGet(() -> UserProfilesGamification.initialize(userId));
+        // 레벨은 저장된 프로필 상태를 직접 추측하지 않고, "적립 후 총 XP"를 기준으로 다시 계산한다.
         int oldLevel = profile.getLevel();
         int newLevel = levelService.calculateLevel(profile.getTotalXp() + amount);
         profile.addXp(amount, newLevel);
         profileRepository.save(profile);
+        // XP 적립, 스트릭 갱신, 이력 저장, 배지 평가가 한 트랜잭션에 묶여야 사용자 상태가 서로 어긋나지 않는다.
         var streak = streakService.recordActivity(userId);
         xpEventRepository.save(XpEvent.create(
                 userId,
@@ -70,6 +74,7 @@ public class GamificationService {
                 request.eventId()
         ));
         var earnedBadges = badgeService.awardEligibleBadges(userId, profile, streak);
+        // DB 상태 변경 후 도메인 결과가 확정된 경우에만 downstream 알림용 이벤트를 발행한다.
         if (newLevel > oldLevel) {
             eventPublisher.publishLevelUp(userId, tenantId, oldLevel, newLevel, profile.getTotalXp());
         }
@@ -79,6 +84,7 @@ public class GamificationService {
 
     @Transactional(readOnly = true)
     public UserGamificationResponse getProfile(Long userId) {
+        // 프로필/스트릭이 아직 없어도 조회 API는 빈 초기 상태를 보여준다. 실제 저장은 적립 시점에만 한다.
         var profile = profileRepository.findById(userId)
                 .orElseGet(() -> UserProfilesGamification.initialize(userId));
         var streak = streakService.findOrInitialize(userId);

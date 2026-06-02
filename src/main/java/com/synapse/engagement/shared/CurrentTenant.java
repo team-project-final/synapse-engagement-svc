@@ -13,6 +13,7 @@ public final class CurrentTenant {
         if (jwt == null) {
             return DEFAULT_TENANT;
         }
+        // 발급자별 claim 이름 차이를 흡수해 Service/Kafka 계층은 tenantId 하나만 보게 한다.
         String tenantId = jwt.getClaimAsString("tenantId");
         if (!StringUtils.hasText(tenantId)) {
             tenantId = jwt.getClaimAsString("tenant_id");

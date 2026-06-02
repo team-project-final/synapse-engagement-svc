@@ -40,6 +40,7 @@ public class MemberController {
             @PathVariable Long groupId,
             @Valid @RequestBody MemberInviteRequest request
     ) {
+        // 초대자는 JWT 사용자이며, Service에서 OWNER/ADMIN인지 확인한 뒤 초대를 생성한다.
         return memberService.invite(groupId, CurrentUser.require(jwt), request);
     }
 
@@ -49,6 +50,7 @@ public class MemberController {
             @AuthenticationPrincipal Jwt jwt,
             @PathVariable Long groupId
     ) {
+        // 공개 그룹은 즉시 ACTIVE, 비공개 그룹은 PENDING으로 들어가는 정책은 도메인 객체가 결정한다.
         return memberService.join(groupId, CurrentUser.require(jwt));
     }
 
@@ -109,6 +111,7 @@ public class MemberController {
             @PathVariable Long userId,
             @Valid @RequestBody JoinRequestDecisionRequest request
     ) {
+        // 가입 요청 승인/거절은 멤버 row의 상태 전이이므로 Service에서 상태와 권한을 함께 검증한다.
         return memberService.decideJoinRequest(groupId, CurrentUser.require(jwt), userId, request);
     }
 }

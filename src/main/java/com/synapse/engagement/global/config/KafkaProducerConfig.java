@@ -1,5 +1,9 @@
 package com.synapse.engagement.global.config;
 
+import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig;
+import io.confluent.kafka.serializers.KafkaAvroSerializer;
+import io.confluent.kafka.serializers.KafkaAvroSerializerConfig;
+import org.apache.avro.specific.SpecificRecord;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,20 +21,25 @@ import java.util.Map;
 @ConditionalOnProperty(prefix = "synapse.kafka", name = "enabled", havingValue = "true")
 public class KafkaProducerConfig {
     @Bean
-    ProducerFactory<String, String> producerFactory(
-            @Value("${spring.kafka.bootstrap-servers:localhost:9092}") String bootstrapServers
+    ProducerFactory<String, SpecificRecord> producerFactory(
+            @Value("${spring.kafka.bootstrap-servers:localhost:9092}") String bootstrapServers,
+            @Value("${spring.kafka.producer.properties.schema.registry.url:http://localhost:8086}") String schemaRegistryUrl
     ) {
         Map<String, Object> config = new HashMap<>();
         config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        // value는 typed Avro record이므로 consumer가 메시지의 schema id로 정확한 writer schema를 가져올 수 있다.
+        config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer.class);
         config.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
         config.put(ProducerConfig.ACKS_CONFIG, "all");
+        config.put(AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistryUrl);
+        // local/dev 발행은 subject를 자동 등록한다. 호환성 검증의 기준은 여전히 shared CI다.
+        config.put(KafkaAvroSerializerConfig.AUTO_REGISTER_SCHEMAS, true);
         return new DefaultKafkaProducerFactory<>(config);
     }
 
     @Bean
-    KafkaTemplate<String, String> kafkaTemplate(ProducerFactory<String, String> producerFactory) {
+    KafkaTemplate<String, SpecificRecord> kafkaTemplate(ProducerFactory<String, SpecificRecord> producerFactory) {
         return new KafkaTemplate<>(producerFactory);
     }
 }
