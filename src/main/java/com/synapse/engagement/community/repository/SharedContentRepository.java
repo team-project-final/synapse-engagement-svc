@@ -14,6 +14,8 @@ public interface SharedContentRepository extends JpaRepository<SharedContent, Lo
 
     Optional<SharedContent> findByIdAndDeletedAtIsNull(Long id);
 
+    Optional<SharedContent> findByIdAndContentTypeAndDeletedAtIsNull(Long id, ContentType contentType);
+
     @Query("""
             select c from SharedContent c
             where c.deletedAt is null

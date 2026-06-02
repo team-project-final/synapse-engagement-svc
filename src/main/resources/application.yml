@@ -7,15 +7,20 @@ spring:
     locations:
       - classpath:db/migration/community/group
       - classpath:db/migration/community/group/member
+      - classpath:db/migration/community/report
       - classpath:db/migration/community/share
       - classpath:db/migration/gamification/xp
   kafka:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      # 이벤트 value는 <topic>-value subject로 등록되는 generated Avro record다.
+      value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
       properties:
         enable.idempotence: true
         acks: all
+        # 로컬 기본값은 synapse-shared compose 기준이다: localhost:8086 -> schema-registry:8081.
+        schema.registry.url: ${SCHEMA_REGISTRY_URL:http://localhost:8086}
+        auto.register.schemas: true
 
 server:
   port: 8083

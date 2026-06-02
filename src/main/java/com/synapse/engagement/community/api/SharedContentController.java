@@ -37,6 +37,7 @@ public class SharedContentController {
             @AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody ShareContentRequest request
     ) {
+        // 공유 콘텐츠의 ownerId도 요청 body가 아니라 JWT subject에서만 가져온다.
         return sharedContentService.share(CurrentUser.require(jwt), request);
     }
 
@@ -59,6 +60,7 @@ public class SharedContentController {
             @AuthenticationPrincipal Jwt jwt,
             @PathVariable String token
     ) {
+        // fork는 원본 공유 토큰을 기준으로 새 소유자의 복사본을 만든다.
         return sharedContentService.fork(CurrentUser.require(jwt), token);
     }
 

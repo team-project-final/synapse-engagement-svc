@@ -1,7 +1,12 @@
 package com.synapse.engagement.gamification.application.event;
 
+import com.synapse.engagement.BadgeEarned;
+import com.synapse.engagement.LevelUp;
 import com.synapse.engagement.gamification.api.dto.BadgeResponse;
 import com.synapse.engagement.gamification.domain.BadgeConditionType;
+import io.confluent.kafka.serializers.KafkaAvroDeserializer;
+import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig;
+import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.junit.jupiter.api.Test;
@@ -21,6 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(properties = {
         "synapse.kafka.enabled=true",
         "spring.kafka.bootstrap-servers=${spring.embedded.kafka.brokers}",
+        "spring.kafka.producer.properties.schema.registry.url=mock://gamification-step7",
         "synapse.kafka.topics.level-up=engagement.gamification.level-up-v1",
         "synapse.kafka.topics.badge-earned=engagement.gamification.badge-earned-v1"
 })
@@ -41,13 +47,16 @@ class GamificationKafkaProducerTests {
     private EmbeddedKafkaBroker embeddedKafka;
 
     @Test
-    void publishesLevelUpAndBadgeEarnedCloudEvents() {
+    void publishesLevelUpAndBadgeEarnedAvroRecords() {
         var consumerProps = KafkaTestUtils.consumerProps("gamification-step7-test", "true", embeddedKafka);
         consumerProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        // 런타임과 같은 serializer 경로를 검증하기 위해 Confluent in-memory registry를 사용한다.
+        consumerProps.put(AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, "mock://gamification-step7");
+        consumerProps.put(KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG, true);
         var consumerFactory = new DefaultKafkaConsumerFactory<>(
                 consumerProps,
                 new StringDeserializer(),
-                new StringDeserializer()
+                new KafkaAvroDeserializer()
         );
 
         try (var consumer = consumerFactory.createConsumer()) {
@@ -78,23 +87,27 @@ class GamificationKafkaProducerTests {
                     "engagement.gamification.badge-earned-v1"
             );
 
-            assertThat(levelUp.key()).isEqualTo("80");
-            assertThat(levelUp.value())
-                    .contains("\"specversion\":\"1.0\"")
-                    .contains("\"tenantid\":\"tenant-a\"")
-                    .contains("\"tenantId\":\"tenant-a\"")
-                    .contains("\"type\":\"com.synapse.event.engagement.GamificationLevelUp\"")
-                    .contains("\"oldLevel\":1")
-                    .contains("\"newLevel\":2");
+            assertThat(levelUp.key()).isEqualTo("tenant-a");
+            assertThat(levelUp.value()).isInstanceOf(LevelUp.class);
+            var levelUpEvent = (LevelUp) levelUp.value();
+            assertThat(levelUpEvent.getEventId()).isNotBlank();
+            assertThat(levelUpEvent.getTenantId()).isEqualTo("tenant-a");
+            assertThat(levelUpEvent.getUserId()).isEqualTo("80");
+            assertThat(levelUpEvent.getPreviousLevel()).isEqualTo(1);
+            assertThat(levelUpEvent.getNewLevel()).isEqualTo(2);
+            assertThat(levelUpEvent.getTotalXp()).isEqualTo(120L);
+            assertThat(levelUpEvent.getOccurredAt()).isPositive();
 
-            assertThat(badgeEarned.key()).isEqualTo("80");
-            assertThat(badgeEarned.value())
-                    .contains("\"specversion\":\"1.0\"")
-                    .contains("\"tenantid\":\"tenant-a\"")
-                    .contains("\"tenantId\":\"tenant-a\"")
-                    .contains("\"type\":\"com.synapse.event.engagement.GamificationBadgeEarned\"")
-                    .contains("\"badgeId\":\"LEVEL_2\"")
-                    .contains("\"badgeName\":\"Level 2\"");
+            assertThat(badgeEarned.key()).isEqualTo("tenant-a");
+            assertThat(badgeEarned.value()).isInstanceOf(BadgeEarned.class);
+            var badgeEarnedEvent = (BadgeEarned) badgeEarned.value();
+            assertThat(badgeEarnedEvent.getEventId()).isNotBlank();
+            assertThat(badgeEarnedEvent.getTenantId()).isEqualTo("tenant-a");
+            assertThat(badgeEarnedEvent.getUserId()).isEqualTo("80");
+            assertThat(badgeEarnedEvent.getBadgeId()).isEqualTo("LEVEL_2");
+            assertThat(badgeEarnedEvent.getBadgeCode()).isEqualTo("LEVEL_2");
+            assertThat(badgeEarnedEvent.getBadgeName()).isEqualTo("Level 2");
+            assertThat(badgeEarnedEvent.getOccurredAt()).isPositive();
         }
     }
 }

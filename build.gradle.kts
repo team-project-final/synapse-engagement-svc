@@ -2,6 +2,8 @@ plugins {
 	java
 	id("org.springframework.boot") version "4.0.0"
 	id("io.spring.dependency-management") version "1.1.7"
+	// 벤더링한 synapse-shared Avro 계약에서 SpecificRecord 클래스를 생성한다.
+	id("com.github.davidmc24.gradle.plugin.avro") version "1.9.1"
 }
 
 group = "io.synapse"
@@ -15,6 +17,8 @@ java {
 
 repositories {
 	mavenCentral()
+	// Confluent serializer는 Maven Central이 아니라 Confluent 저장소에서 받는다.
+	maven { url = uri("https://packages.confluent.io/maven/") }
 }
 
 dependencies {
@@ -29,6 +33,9 @@ dependencies {
 	implementation("org.springframework.data:spring-data-commons")
 	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3")
 	implementation("org.mapstruct:mapstruct:1.6.3")
+	// Kafka 이벤트 value는 EVENT_CONTRACT_STANDARD 기준으로 Avro + Schema Registry를 사용한다.
+	implementation("org.apache.avro:avro:1.11.3")
+	implementation("io.confluent:kafka-avro-serializer:7.5.0")
 	annotationProcessor("org.mapstruct:mapstruct-processor:1.6.3")
 	runtimeOnly("com.h2database:h2")
 	runtimeOnly("org.flywaydb:flyway-database-postgresql")

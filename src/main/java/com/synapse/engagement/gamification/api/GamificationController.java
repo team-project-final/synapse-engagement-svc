@@ -43,6 +43,7 @@ public class GamificationController {
 
     @GetMapping("/me")
     public UserGamificationResponse me(@AuthenticationPrincipal Jwt jwt) {
+        // Controller는 인증 주체만 해석하고, XP/배지/스트릭 계산 규칙은 Service에 위임한다.
         return gamificationService.getProfile(CurrentUser.require(jwt));
     }
 
@@ -70,6 +71,7 @@ public class GamificationController {
             @AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody AddXpRequest request
     ) {
+        // tenantId는 Kafka 이벤트 파티션 키와 Avro 메타 필드에 쓰이므로 XP 적립 흐름까지 함께 전달한다.
         return gamificationService.addXp(CurrentUser.require(jwt), CurrentTenant.resolve(jwt), request);
     }
 }

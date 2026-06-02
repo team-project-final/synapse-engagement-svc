@@ -38,6 +38,7 @@ public class MemberService {
     public InviteDecisionResponse invite(Long groupId, Long actorId, MemberInviteRequest request) {
         var group = groupService.findActiveGroup(groupId);
         requireModerator(groupId, actorId);
+        // KICKED 멤버는 보관된 멤버십을 재사용한다. 새 row를 만들면 과거 제재/상태 추적이 끊긴다.
         var existing = reusableKickedMembership(groupId, request.userId());
         if (existing != null) {
             existing.reinvite(newInviteToken(), inviteExpiresAt());
@@ -53,6 +54,7 @@ public class MemberService {
     @Transactional
     public MemberResponse join(Long groupId, Long userId) {
         var group = groupService.findActiveGroup(groupId);
+        // 재가입 가능 기간이 지난 KICKED 사용자는 기존 row를 되살려 멤버 이력을 유지한다.
         var existing = reusableKickedMembership(groupId, userId);
         if (existing != null) {
             existing.reactivate(group.isPublicGroup());
@@ -61,6 +63,7 @@ public class MemberService {
         var existingMembership = memberRepository.findByGroupIdAndUserId(groupId, userId)
                 .orElse(null);
         if (existingMembership != null) {
+            // 거절/거부 상태는 사용자가 다시 가입 신청할 수 있지만, ACTIVE/INVITED/PENDING은 중복으로 본다.
             if (existingMembership.getStatus() == MemberStatus.DECLINED
                     || existingMembership.getStatus() == MemberStatus.REJECTED) {
                 existingMembership.requestToJoin(group.isPublicGroup());
@@ -73,6 +76,7 @@ public class MemberService {
 
     @Transactional
     public MemberResponse approve(Long groupId, Long actorId, Long memberId) {
+        // 승인 권한은 그룹 멤버십의 역할(OWNER/ADMIN)로 판단한다.
         requireModerator(groupId, actorId);
         var member = findMember(groupId, memberId);
         member.approve();
@@ -82,6 +86,7 @@ public class MemberService {
     @Transactional
     public InviteDecisionResponse acceptInvite(Long groupId, Long userId, String token) {
         var member = findInvite(groupId, token);
+        // 초대 URL을 알더라도 초대 대상 userId와 JWT subject가 다르면 수락할 수 없다.
         requireInviteTarget(member, userId);
         requireUsableInvite(member);
         member.acceptInvite();
@@ -117,6 +122,7 @@ public class MemberService {
         requireModerator(groupId, actorId);
         var member = memberRepository.findByGroupIdAndUserId(groupId, userId)
                 .orElseThrow(() -> new NotFoundException("Join request not found: userId=" + userId));
+        // 상태 전이는 PENDING 요청에만 허용해 이미 처리된 요청의 재처리를 막는다.
         if (member.getStatus() != MemberStatus.PENDING) {
             throw new ConflictException("Only pending join requests can be decided");
         }
@@ -133,9 +139,11 @@ public class MemberService {
     @Transactional
     public void remove(Long groupId, Long actorId, Long memberId) {
         var member = findMember(groupId, memberId);
+        // 소유자 제거는 소유권 이전 정책이 필요하므로 현재 범위에서는 금지한다.
         if (member.isOwner()) {
             throw new ForbiddenException("Group owner cannot leave or be removed without ownership transfer");
         }
+        // 본인은 탈퇴할 수 있고, 다른 사람을 제거하려면 moderator 권한이 필요하다.
         if (!member.getUserId().equals(actorId)) {
             requireModerator(groupId, actorId);
         }
@@ -168,6 +176,7 @@ public class MemberService {
         return memberRepository.findByGroupIdAndUserId(groupId, userId)
                 .filter(member -> member.getStatus() == MemberStatus.KICKED)
                 .map(member -> {
+                    // 강퇴 직후 재가입을 막아 moderation 결정이 즉시 우회되지 않게 한다.
                     if (member.getKickedAt() != null
                             && member.getKickedAt().isAfter(Instant.now().minus(KICKED_REJOIN_BLOCK))) {
                         throw new ForbiddenException("Kicked users cannot rejoin for 7 days");
@@ -180,6 +189,7 @@ public class MemberService {
     private void requireModerator(Long groupId, Long userId) {
         var actor = memberRepository.findByGroupIdAndUserId(groupId, userId)
                 .orElseThrow(() -> new ForbiddenException("Group membership is required"));
+        // 멤버 관리 작업은 그룹 소유자나 관리자만 수행한다.
         if (!actor.canModerate()) {
             throw new ForbiddenException("OWNER or ADMIN role is required");
         }

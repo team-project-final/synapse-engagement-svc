@@ -94,14 +94,16 @@
 
 ### 7.3 Security 1차 검토
 - [ ] Kafka 토픽 ACL 설정 (engagement-svc만 발행 권한)
+- [x] Kafka ACL 계약 시뮬레이션 테스트 (허용 토픽 + tenantId partition key 검증)
+  - 주석: 실제 broker ACL 적용 검증은 아니며, mock KafkaTemplate 기반으로 engagement-svc가 허용된 gamification 토픽 2개에만 발행하는지 검증 완료.
 - [x] 이벤트 페이로드 민감정보 미포함 확인
-- [x] Schema Registry Avro/JSON Schema 등록
+- [x] Schema Registry Avro 스키마 등록
 - [x] 결과 → TASK Constraints 반영
 
 ### 7.4 Kafka 토픽 설계
 - [x] gamification.level_up 토픽 설정 (파티션, 복제, 보존)
 - [x] gamification.badge_earned 토픽 설정
-- [x] 이벤트 키 전략 (userId 기반 파티셔닝)
+- [x] 이벤트 키 전략 (tenantId 기반 파티셔닝)
 - [x] Duration(final) 갱신
 
 ### 7.5 Security 2차 검토
@@ -111,9 +113,9 @@
 - [x] 결과 → TASK Constraints 반영
 
 ### 7.6 DTO / Entity 설계 (API First)
-- [x] LevelUpEvent DTO 정의 (userId, oldLevel, newLevel, totalXp, occurredAt)
-- [x] BadgeEarnedEvent DTO 정의 (userId, badgeId, badgeName, occurredAt)
-- [x] Avro/JSON Schema 작성 (Schema Registry 등록은 운영 Kafka 환경에서 진행)
+- [x] `com.synapse.engagement.LevelUp` Avro record 정의 (eventId, tenantId, userId, newLevel, previousLevel, totalXp, occurredAt)
+- [x] `com.synapse.engagement.BadgeEarned` Avro record 정의 (eventId, tenantId, userId, badgeId, badgeCode, badgeName, occurredAt)
+- [x] shared Avro 스키마 벤더링 (`src/main/avro/engagement`) 및 Schema Registry 발행 경로 반영
 - [x] Output Format → TASK 반영
 
 ### 7.7 Producer 구현
@@ -132,6 +134,8 @@
 ### 7.9 E2E 검증
 - [x] Docker Compose 환경에서 이벤트 발행 확인
 - [x] kafka-console-consumer로 이벤트 수신 확인
+- [x] mock notification processor 계약 테스트 (Avro consume → notification command 변환)
+  - 주석: 실제 platform notification 프로세스 연동은 아니며, mock consumer가 level-up/badge-earned Avro 이벤트를 읽어 notification command로 변환할 수 있음을 검증 완료.
 - [ ] notification 서비스 연동 테스트 (이벤트 → 알림 발송)
 
 ### 7.10 결과 정리
@@ -146,67 +150,68 @@
 ## Step 8: community 신고 + Admin 모더레이션 — 신고 접수/처리 API
 
 ### 8.1 TASK 시작
-- [ ] Step Goal / Done When / Scope / Input 확인
-- [ ] PRD_W3 해당 요구사항 확인 (신고/모더레이션)
-- [ ] Duration 산정 확인
+- [x] Step Goal / Done When / Scope / Input 확인
+- [x] PRD_W3 해당 요구사항 확인 (신고/모더레이션)
+- [x] Duration 산정 확인
 
 ### 8.2 요구사항 분석
-- [ ] 신고 유형 정의 (스팸, 욕설, 부적절 콘텐츠 등)
-- [ ] 신고 대상 정의 (게시글, 댓글, 사용자)
-- [ ] 관리자 모더레이션 워크플로우 (접수 → 검토 → 승인/거부)
-- [ ] Instructions 초안 → TASK 문서 반영
+- [x] 신고 유형 정의 (초기: 자유 입력 reason, 1000자 제한)
+- [x] 신고 대상 정의 (`SHARED_DECK`, `SHARED_NOTE`, `STUDY_GROUP`, `USER`)
+- [x] 관리자 모더레이션 워크플로우 (접수 → 검토 → 승인/거부)
+- [x] Instructions 초안 → TASK 문서 반영
 
 ### 8.3 Security 1차 검토
-- [ ] 인증 필요 여부: Yes (신고: 로그인 사용자, 처리: 관리자)
-- [ ] 권한 종류: USER(신고), ADMIN(처리)
-- [ ] 중복 신고 방지 (동일 사용자 → 동일 대상 1회 제한)
-- [ ] 결과 → TASK Constraints 반영
+- [x] 인증 필요 여부: Yes (신고: 로그인 사용자, 처리: 관리자)
+- [x] 권한 종류: USER(신고), ADMIN(처리)
+- [x] 중복 신고 방지 (동일 사용자 → 동일 대상 1회 제한)
+- [x] 결과 → TASK Constraints 반영
 
 ### 8.4 ERD 설계
-- [ ] reports 테이블 설계 (id, reporter_user_id, target_type, target_id, reason, status, action_taken, created_at, reviewed_at)
-- [ ] target_type 값: shared_deck|shared_note|study_group|user
-- [ ] status ENUM 정의 (pending, reviewed, resolved, dismissed)
-- [ ] 인덱스 설계 (status, reporter_user_id, target_type+target_id)
-- [ ] UNIQUE 제약: reporter_user_id + target_type + target_id
-- [ ] Duration(final) 갱신
+- [x] reports 테이블 설계 (id, reporter_id, target_type, target_id, reason, status, admin_note, created_at, resolved_at)
+- [x] target_type 값: `SHARED_DECK`|`SHARED_NOTE`|`STUDY_GROUP`|`USER`
+- [x] status ENUM 정의 (`PENDING`, `APPROVED`, `REJECTED`)
+- [x] 인덱스 설계 (status, reporter_id, target_type+target_id)
+- [x] UNIQUE 제약: reporter_id + target_type + target_id
+- [x] Duration(final) 갱신
 
 ### 8.5 Security 2차 검토
-- [ ] 신고자 익명성 보장 (신고 대상자에게 신고자 미노출)
-- [ ] 승인 시 콘텐츠 숨김/삭제 처리 + audit 로그 기록
-- [ ] 거부 시 신고 무효 처리 + 사유 기록
-- [ ] 결과 → TASK Constraints 반영
+- [x] 신고자 익명성 보장 (ReportResponse에 reporterId 미포함)
+- [x] 승인 시 콘텐츠 숨김/삭제 처리 + DB audit 기록 (`admin_note`, `resolved_at`)
+- [x] 거부 시 신고 무효 처리 + 사유 기록
+- [x] 결과 → TASK Constraints 반영
+  - 주석: shared Avro 계약이 없는 moderation audit Kafka 이벤트는 생성하지 않았고, Step 8 범위에서는 DB audit record로 검증 완료.
 
 ### 8.6 DTO / Entity 설계 (API First)
-- [ ] Report Entity 작성
-- [ ] ReportCreateRequest DTO 정의 (target_type, target_id, reason)
-- [ ] ReportResponse DTO 정의
-- [ ] ReportModerateRequest DTO 정의 (status, action_taken)
-- [ ] Output Format → TASK 반영
+- [x] Report Entity 작성
+- [x] ReportCreateRequest DTO 정의 (targetType, targetId, reason)
+- [x] ReportResponse DTO 정의
+- [x] ReportModerateRequest DTO 정의 (status, adminNote)
+- [x] Output Format → TASK 반영
 
 ### 8.7 Repository 구현
-- [ ] ReportRepository 인터페이스 작성
-- [ ] findByStatus 커스텀 쿼리 (pending 목록)
-- [ ] existsByReporterUserIdAndTargetTypeAndTargetId 중복 검사 쿼리
+- [x] ReportRepository 인터페이스 작성
+- [x] findByStatus 쿼리 (pending 목록)
+- [x] existsByReporterIdAndTargetTypeAndTargetId 중복 검사 쿼리
 
 ### 8.8 Service + Test
-- [ ] ReportService 구현 (신고 접수 — 중복 검사, 생성)
-- [ ] ModerationService 구현 (관리자 처리 — 승인/거부, 콘텐츠 숨김)
-- [ ] 승인 시 community.report.created 기반 후속 처리 실행 (별도 approved 토픽 없음 — 아키텍처 미정의)
-- [ ] 단위 테스트 작성 (Mockito)
-- [ ] 테스트 통과 확인
+- [x] ReportService 구현 (신고 접수 — 대상 존재 검증, 중복 검사, 생성)
+- [x] ModerationService 구현 (관리자 처리 — 승인/거부, 콘텐츠 숨김)
+- [x] 승인 시 community report DB audit 기반 후속 처리 실행 (별도 approved 토픽 없음 — shared Avro 계약 미정의)
+- [x] 단위 테스트 작성 (Mockito)
+- [x] 테스트 통과 확인
 
 ### 8.9 Controller + Test
-- [ ] POST /community/reports 엔드포인트 구현 (신고 접수)
-- [ ] GET /admin/reports 엔드포인트 구현 (관리자 신고 목록, 페이징)
-- [ ] PUT /admin/reports/{id}/resolve 엔드포인트 구현 (승인/거부 처리)
-- [ ] 슬라이스 테스트 (@WebMvcTest)
-- [ ] 403 Forbidden 테스트 (비관리자 처리 시도)
-- [ ] 409 Conflict 테스트 (중복 신고)
-- [ ] 테스트 통과 확인
+- [x] POST `/api/v1/community/reports` 엔드포인트 구현 (신고 접수)
+- [x] GET `/api/v1/admin/reports` 엔드포인트 구현 (관리자 신고 목록, status 필터)
+- [x] PATCH `/api/v1/admin/reports/{id}` 엔드포인트 구현 (승인/거부 처리)
+- [x] 슬라이스 테스트 (@WebMvcTest)
+- [x] 403 Forbidden 테스트 (비관리자 처리 시도)
+- [x] 409 Conflict 테스트 (중복 신고)
+- [x] 테스트 통과 확인
 
 ### 8.10 View + Test (해당 시)
-- [ ] Flutter 화면 연동: 해당 없음 (프론트 별도)
-- [ ] Swagger API 문서 확인
-- [ ] RULE Reference → TASK 반영
+- [x] Flutter 화면 연동: 해당 없음 (프론트 별도)
+- [x] Swagger API 문서 확인 (`/v3/api-docs` report/admin endpoints 테스트)
+- [x] RULE Reference → TASK 반영
 
-**Step 8 Status**: [x] Not Started / [ ] In Progress / [ ] Done
+**Step 8 Status**: [ ] Not Started / [ ] In Progress / [x] Done
