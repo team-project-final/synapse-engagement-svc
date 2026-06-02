@@ -11,6 +11,9 @@ spring:
       - classpath:db/migration/community/share
       - classpath:db/migration/gamification/xp
   kafka:
+    consumer:
+      group-id: ${KAFKA_CONSUMER_GROUP_ID:engagement-svc-group}
+      auto-offset-reset: earliest
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       # 이벤트 value는 <topic>-value subject로 등록되는 generated Avro record다.
@@ -44,6 +47,8 @@ synapse:
     topics:
       level-up: ${KAFKA_TOPIC_LEVEL_UP:engagement.gamification.level-up-v1}
       badge-earned: ${KAFKA_TOPIC_BADGE_EARNED:engagement.gamification.badge-earned-v1}
+      user-registered: ${KAFKA_TOPIC_USER_REGISTERED:platform.auth.user-registered-v1}
+      review-completed: ${KAFKA_TOPIC_REVIEW_COMPLETED:learning.card.review-completed-v1}
 
 logging:
   pattern:
