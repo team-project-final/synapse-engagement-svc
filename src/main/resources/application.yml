@@ -1,0 +1,55 @@
+spring:
+  application:
+    name: engagement-svc
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  flyway:
+    locations:
+      - classpath:db/migration/community/group
+      - classpath:db/migration/community/group/member
+      - classpath:db/migration/community/report
+      - classpath:db/migration/community/share
+      - classpath:db/migration/gamification/xp
+  kafka:
+    consumer:
+      group-id: ${KAFKA_CONSUMER_GROUP_ID:engagement-svc-group}
+      auto-offset-reset: earliest
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      # 이벤트 value는 <topic>-value subject로 등록되는 generated Avro record다.
+      value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
+      properties:
+        enable.idempotence: true
+        acks: all
+        # 로컬 기본값은 synapse-shared compose 기준이다: localhost:8086 -> schema-registry:8081.
+        schema.registry.url: ${SCHEMA_REGISTRY_URL:http://localhost:8086}
+        auto.register.schemas: true
+
+server:
+  port: 8083
+
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+synapse:
+  jwt:
+    public-key: ${JWT_PUBLIC_KEY:}
+    issuer: ${JWT_ISSUER:synapse-auth}
+  kafka:
+    enabled: ${KAFKA_ENABLED:false}
+    topics:
+      level-up: ${KAFKA_TOPIC_LEVEL_UP:engagement.gamification.level-up-v1}
+      badge-earned: ${KAFKA_TOPIC_BADGE_EARNED:engagement.gamification.badge-earned-v1}
+      user-registered: ${KAFKA_TOPIC_USER_REGISTERED:platform.auth.user-registered-v1}
+      review-completed: ${KAFKA_TOPIC_REVIEW_COMPLETED:learning.card.review-completed-v1}
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p [%thread] %logger{36} - %msg%n"
