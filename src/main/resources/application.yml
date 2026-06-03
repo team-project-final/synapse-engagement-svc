@@ -11,6 +11,10 @@ spring:
       - classpath:db/migration/community/share
       - classpath:db/migration/gamification/xp
   kafka:
+    # Kafka 클라이언트 bootstrap 주소. 다른 svc와 동일하게 KAFKA_BOOTSTRAP_SERVERS env를 읽음
+    # (미설정 시 localhost:9092 폴백). 배포 환경은 base가 kafka-brokers ConfigMap 값을 주입한다.
+    # 단, 실제 소비/발행은 synapse.kafka.enabled=true(KAFKA_ENABLED) 일 때만 동작한다.
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     consumer:
       group-id: ${KAFKA_CONSUMER_GROUP_ID:engagement-svc-group}
       auto-offset-reset: earliest
