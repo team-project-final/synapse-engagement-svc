@@ -22,7 +22,7 @@ class GroupServiceOwnerTests {
     @Test
     void findOwnerIdReturnsGroupOwner() {
         var group = Group.create("Test Group", "desc", true, 77L);
-        when(groupRepository.findById(5L)).thenReturn(Optional.of(group));
+        when(groupRepository.findByIdAndDeletedAtIsNull(5L)).thenReturn(Optional.of(group));
 
         Long ownerId = service.findOwnerId(5L);
 
@@ -31,7 +31,7 @@ class GroupServiceOwnerTests {
 
     @Test
     void findOwnerIdThrowsWhenGroupNotFound() {
-        when(groupRepository.findById(999L)).thenReturn(Optional.empty());
+        when(groupRepository.findByIdAndDeletedAtIsNull(999L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.findOwnerId(999L))
                 .isInstanceOf(NotFoundException.class)

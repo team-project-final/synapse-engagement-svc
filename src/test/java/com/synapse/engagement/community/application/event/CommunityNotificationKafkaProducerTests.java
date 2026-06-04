@@ -25,5 +25,7 @@ class CommunityNotificationKafkaProducerTests {
         assertThat(sent.getUserId()).isEqualTo("42");
         assertThat(sent.getNotificationType()).isEqualTo("REPORT_RESOLVED");
         assertThat(sent.getChannels()).contains("FCM");
+        assertThat(sent.getEventId()).isNotNull();
+        assertThat(sent.getOccurredAt()).isPositive();
     }
 }

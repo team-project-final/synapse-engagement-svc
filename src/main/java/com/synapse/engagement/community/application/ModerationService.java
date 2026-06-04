@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
-import java.util.Optional;
 
 @Service
 public class ModerationService {
@@ -43,19 +42,22 @@ public class ModerationService {
                 .orElseThrow(() -> new NotFoundException("Report not found: id=" + reportId));
 
         if (request.status() == ReportStatus.APPROVED) {
-            // 승인 처리는 신고 상태 변경과 대상 숨김을 같은 트랜잭션에 묶어 moderation 결과가 엇갈리지 않게 한다.
+            // owner를 먼저 확인한다: hideTarget이 soft-delete를 수행하면 findByIdAndDeletedAtIsNull이
+            // empty를 반환해 NotFoundException → 트랜잭션 롤백으로 이어지는 버그를 방지하기 위해
+            // 콘텐츠가 아직 살아 있는 시점에 owner를 조회한다.
+            java.util.Optional<Long> ownerIdOpt = resolveReportedUserId(report); // BEFORE hideTarget (content still present)
             hideTarget(report);
             report.approve(request.adminNote());
             ReportResponse response = ReportResponse.from(report);
             // best-effort: 알림 발행 실패가 모더레이션 트랜잭션을 깨지 않도록 감싼다.
             try {
                 notifyReporter(report, tenantId, "REPORT_RESOLVED", "신고가 처리되었습니다", "신고하신 콘텐츠가 제재되었습니다.");
-                resolveReportedUserId(report).ifPresent(ownerId ->
-                        publisher.publishModerationNotification(ownerId, tenantId, "CONTENT_REMOVED",
-                                "콘텐츠가 제재되었습니다", "신고 검토 결과 회원님의 콘텐츠가 제재되었습니다.",
-                                Map.of("reportId", String.valueOf(report.getId()))));
+                ownerIdOpt.ifPresent(ownerId -> publisher.publishModerationNotification(
+                        ownerId, tenantId, "CONTENT_REMOVED", "콘텐츠가 제재되었습니다",
+                        "신고 검토 결과 회원님의 콘텐츠가 제재되었습니다.",
+                        java.util.Map.of("reportId", String.valueOf(report.getId()))));
             } catch (Exception e) {
-                log.warn("알림 발행 실패 (best-effort, 모더레이션 트랜잭션은 유지): reportId={}", reportId, e);
+                log.warn("Moderation notification publish failed (reportId={}): {}", report.getId(), e.getMessage());
             }
             return response;
         }
@@ -91,11 +93,17 @@ public class ModerationService {
                 Map.of("reportId", String.valueOf(report.getId()), "targetType", report.getTargetType().name()));
     }
 
-    private Optional<Long> resolveReportedUserId(Report report) {
-        return switch (report.getTargetType()) {
-            case USER -> Optional.of(report.getTargetId()); // targetId == 피신고자
-            case SHARED_DECK, SHARED_NOTE -> Optional.ofNullable(sharedContentService.findOwnerId(report.getTargetType(), report.getTargetId()));
-            case STUDY_GROUP -> Optional.ofNullable(groupService.findOwnerId(report.getTargetId()));
-        };
+    private java.util.Optional<Long> resolveReportedUserId(Report report) {
+        try {
+            return switch (report.getTargetType()) {
+                case USER -> java.util.Optional.of(report.getTargetId()); // targetId == 피신고자
+                case SHARED_DECK, SHARED_NOTE -> java.util.Optional.of(
+                        sharedContentService.findOwnerId(report.getTargetType(), report.getTargetId()));
+                case STUDY_GROUP -> java.util.Optional.of(groupService.findOwnerId(report.getTargetId()));
+            };
+        } catch (NotFoundException e) {
+            log.warn("Reported owner not found, skipping owner notification (reportId={}): {}", report.getId(), e.getMessage());
+            return java.util.Optional.empty();
+        }
     }
 }
