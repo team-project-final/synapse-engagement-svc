@@ -15,8 +15,8 @@
 |------|--------|----------|--------|
 | W1 | 05-12~05-16 | 116/116 | Done |
 | W2 | 05-19~05-23 | 106/106 | Done |
-| W3 | 05-26~05-29 | 80/126 | In Progress |
-| W4 | 06-01~06-05 | 0/43 | Not Started |
+| W3 | 05-26~05-29 | 124/126 | In Progress |
+| W4 | 06-01~06-05 | 30/43 | In Progress |
 | W5 | 06-08~06-12 | 0/16 | Not Started |
 
 ---
@@ -294,15 +294,16 @@
 - **Task ID**: TASK-EG-009
 - **Title**: Kafka 이벤트 연동
 - **Owner**: 한승완
-- **Status**: TODO
+- **Status**: DONE
+- **Current Progress**: Step 9 기준으로 `learning.card.review-completed-v1` Avro Consumer를 XP 적립 유스케이스에 연결하고, 레벨업/배지 수여 시 `engagement.gamification.level-up-v1`, `engagement.gamification.badge-earned-v1` Avro 이벤트를 발행하도록 통합 검증했다. Consumer 실패 처리는 1초 간격 3회 재시도 후 `{원본토픽}.dlq` 발행으로 정리했다.
 - **Priority**: P0
-- **Step Goal**: engagement-svc가 `card.reviewed` 이벤트를 소비해 XP를 적립하고, 레벨업/배지 수여 이벤트를 발행한다.
+- **Step Goal**: engagement-svc가 `learning.card.review-completed-v1` 이벤트를 소비해 XP를 적립하고, 레벨업/배지 수여 이벤트를 발행한다.
 - **Done When**:
-  - [ ] `card.reviewed` 소비 계약 확정
-  - [ ] XP 적립 Consumer 구현
-  - [ ] level up / badge earned Producer 구현
-  - [ ] 중복 수신 시 XP 중복 적립 방지
-  - [ ] Kafka 통합 테스트 통과
+  - [x] `learning.card.review-completed-v1` 소비 계약 확정
+  - [x] XP 적립 Consumer 구현
+  - [x] level up / badge earned Producer 구현
+  - [x] 중복 수신 시 XP 중복 적립 방지
+  - [x] Kafka 통합 테스트 통과
 - **Scope**:
   - In Scope:
     - Consumer/Producer 설정
@@ -311,6 +312,18 @@
   - Out of Scope:
     - notification 서비스 알림 구현
     - 스키마 호환성 정책 변경
+- **Constraints**:
+  - Kafka listener는 `synapse.kafka.enabled=true`일 때만 활성화한다.
+  - inbound `ReviewCompleted` 스키마에는 `eventId`가 없어 `cardId + reviewedAt` 조합을 XP 멱등성 키로 사용한다.
+  - 이벤트 payload에는 민감 정보를 포함하지 않고 `tenantId`를 partition key로 사용한다.
+  - Consumer 실패는 1초 간격 3회 재시도 후 `{원본토픽}.dlq`로 발행한다.
+- **Output Format**:
+  - Consumer input: `com.synapse.learning.ReviewCompleted`
+  - Producer output: `com.synapse.engagement.LevelUp`, `com.synapse.engagement.BadgeEarned`
+- **Verification**:
+  - `EngagementKafkaEventHandlerTests`: UserRegistered/Profile 생성, ReviewCompleted XP 적립, 중복 XP skip
+  - `EngagementKafkaStep9IntegrationTests`: EmbeddedKafka `ReviewCompleted` → XP 적립 → level-up/badge-earned 발행
+  - `GamificationKafkaProducerTests`: Avro Producer publish/consume 검증
 - **Dependencies**: TASK-EG-004, TASK-EG-006
 - **Due Date**: 2026-06-05
 
@@ -319,15 +332,16 @@
 - **Task ID**: TASK-EG-010
 - **Title**: 게이미피케이션 E2E 테스트 + 버그 수정
 - **Owner**: 한승완
-- **Status**: TODO
+- **Status**: DONE
+- **Current Progress**: Step 10 기준으로 `GamificationStep10E2ETests`를 추가해 복습 XP 적립, 최초 XP 배지, 레벨업, LEVEL_2 배지, 중복 이벤트 409 방지, 내 프로필 조회, XP 이력 조회, 리더보드 1위 반영까지 REST E2E로 검증했다. 신규 P0/P1/P2 실패는 없었고 전체 회귀 테스트가 통과했다.
 - **Priority**: P0
 - **Step Goal**: 게이미피케이션 플로우가 E2E로 통과하고 발견된 P0 버그가 수정된다.
 - **Done When**:
-  - [ ] 복습→XP→배지→레벨업→리더보드 시나리오 실행
-  - [ ] 실패 항목 기록
-  - [ ] P0/P1/P2 분류
-  - [ ] P0 버그 수정
-  - [ ] 회귀 테스트 통과
+  - [x] 복습→XP→배지→레벨업→리더보드 시나리오 실행
+  - [x] 실패 항목 기록
+  - [x] P0/P1/P2 분류
+  - [x] P0 버그 수정: 신규 P0 없음
+  - [x] 회귀 테스트 통과
 - **Scope**:
   - In Scope:
     - 게이미피케이션 E2E
@@ -336,6 +350,15 @@
   - Out of Scope:
     - 신규 기능 추가
     - 성능 튜닝
+- **Constraints**:
+  - Step 10은 engagement-svc REST E2E와 Step 9 Kafka 통합 테스트 결과를 기준으로 검증한다.
+  - 실제 learning-svc/notification-svc를 포함한 MSA 전체 E2E는 별도 통합 환경 검증으로 남긴다.
+  - 프로젝트에 정량 커버리지 도구가 없어 80% 수치는 산출하지 않고 전체 회귀 테스트 통과를 기록한다.
+- **Verification**:
+  - `GamificationStep10E2ETests`: 복습 XP → 배지 → 레벨업 → 중복 방지 → 이력 → 리더보드 REST E2E
+  - `EngagementKafkaStep9IntegrationTests`: Kafka `ReviewCompleted` → XP 적립 → level-up/badge-earned 발행
+  - `EngagementApiSmokeTests`: gamification API docs 및 smoke flow
+  - Full regression: `.\gradlew.bat test` 성공 (2026-06-04)
 - **Dependencies**: TASK-EG-006, TASK-EG-009
 - **Due Date**: 2026-06-05
 
