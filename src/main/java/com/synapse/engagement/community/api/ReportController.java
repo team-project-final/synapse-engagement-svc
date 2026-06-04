@@ -6,6 +6,7 @@ import com.synapse.engagement.community.api.dto.ReportResponse;
 import com.synapse.engagement.community.application.ModerationService;
 import com.synapse.engagement.community.application.ReportService;
 import com.synapse.engagement.community.domain.ReportStatus;
+import com.synapse.engagement.shared.CurrentTenant;
 import com.synapse.engagement.shared.CurrentUser;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -61,6 +62,7 @@ public class ReportController {
             @Valid @RequestBody ReportModerateRequest request
     ) {
         CurrentUser.requireAdmin(jwt);
-        return moderationService.moderate(reportId, request);
+        String tenantId = CurrentTenant.resolve(jwt);
+        return moderationService.moderate(reportId, request, tenantId);
     }
 }

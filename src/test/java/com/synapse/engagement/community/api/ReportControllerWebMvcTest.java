@@ -115,7 +115,7 @@ class ReportControllerWebMvcTest {
                         null
                 )
         ));
-        when(moderationService.moderate(eq(1L), any(ReportModerateRequest.class)))
+        when(moderationService.moderate(eq(1L), any(ReportModerateRequest.class), any(String.class)))
                 .thenReturn(new ReportResponse(
                         1L,
                         ReportTargetType.STUDY_GROUP,
