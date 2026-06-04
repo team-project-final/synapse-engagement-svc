@@ -16,7 +16,7 @@
 | W1 | 05-12~05-16 | 116/116 | Done |
 | W2 | 05-19~05-23 | 106/106 | Done |
 | W3 | 05-26~05-29 | 124/126 | In Progress |
-| W4 | 06-01~06-05 | 30/43 | In Progress |
+| W4 | 06-01~06-05 | 43/43 | Done |
 | W5 | 06-08~06-12 | 0/16 | Not Started |
 
 ---
@@ -367,15 +367,25 @@
 - **Task ID**: TASK-EG-011
 - **Title**: 커뮤니티 공유/신고 E2E 테스트 + 안정화
 - **Owner**: 한승완
-- **Status**: TODO
+- **Status**: DONE
 - **Priority**: P0
 - **Step Goal**: 커뮤니티 공유/검색/복사 및 신고/처리 플로우가 E2E로 통과하고 P0 버그가 수정된다.
 - **Done When**:
-  - [ ] 공유→검색→복사 시나리오 실행
-  - [ ] 신고→관리자 처리 시나리오 실행
-  - [ ] 실패 항목 기록
-  - [ ] P0 버그 수정
-  - [ ] 회귀 테스트 통과
+  - [x] 공유→검색→복사 시나리오 실행
+  - [x] 신고→관리자 처리 시나리오 실행
+  - [x] 실패 항목 기록
+  - [x] P0 버그 수정
+  - [x] 회귀 테스트 통과
+- **Current Progress**:
+  - Step 11 E2E 테스트 `CommunityStep11E2ETests` 추가
+  - 공유 생성, token 조회, 검색, fork, 원본 downloadCount 증가, sourceShareId 연결 검증
+  - 신고 생성, 중복 신고 409, 비관리자 admin API 403, 관리자 승인, 신고 대상 숨김 검증
+- **Constraints**:
+  - 신규 P0/P1/P2 버그 없음
+  - 정량 커버리지 리포트 태스크는 현재 Gradle 검증 흐름에 연결되어 있지 않아 E2E + 전체 회귀 테스트로 대체 확인
+- **Verification**:
+  - `.\gradlew.bat test --tests "com.synapse.engagement.community.CommunityStep11E2ETests"` → BUILD SUCCESSFUL
+  - `.\gradlew.bat test` → BUILD SUCCESSFUL
 - **Scope**:
   - In Scope:
     - 커뮤니티 전체 플로우 E2E

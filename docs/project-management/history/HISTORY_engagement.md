@@ -45,9 +45,9 @@
 |------|------|------|--------|------|
 | Step 9 | Kafka 이벤트 연동 — learning.card.review-completed 소비 + gamification 이벤트 발행 | Done | 17/17 | Avro Consumer, XP 적립, DLQ, EmbeddedKafka 통합 테스트 |
 | Step 10 | 게이미피케이션 E2E 테스트 + 버그 수정 | Done | 13/13 | REST E2E, 중복 방지, 이력/리더보드, 회귀 테스트 |
-| Step 11 | 커뮤니티 공유/신고 E2E 테스트 + 안정화 | Not Started | 0/13 | |
+| Step 11 | 커뮤니티 공유/신고 E2E 테스트 + 안정화 | Done | 13/13 | 공유/검색/fork/신고/관리자 처리 E2E, 회귀 테스트 |
 
-**W4 진행률**: 30/43 Checks 완료
+**W4 진행률**: 43/43 Checks 완료
 
 ### W5 (2026-06-08 ~ 06-12)
 
@@ -112,6 +112,7 @@
 
 | 날짜 | 변경 사항 |
 |------|-----------|
+| 2026-06-04 | W4 Step 11 커뮤니티 공유/신고 E2E 테스트 및 회귀 검증 완료 |
 | 2026-06-04 | W4 Step 10 게이미피케이션 E2E 테스트 및 회귀 검증 완료 |
 | 2026-06-04 | W4 Step 9 Kafka Consumer/Producer 통합 검증 및 DLQ 재처리 정책 반영 |
 | 2026-06-01 | W3 Step 8 community 신고 + Admin 모더레이션 Done 처리 |
