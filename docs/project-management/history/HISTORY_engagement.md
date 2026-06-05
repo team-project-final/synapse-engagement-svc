@@ -112,6 +112,7 @@
 
 | 날짜 | 변경 사항 |
 |------|-----------|
+| 2026-06-05 | #25/#26/#28 배포 선결조건 보강: semver 이미지 릴리스 workflow, Kafka security.protocol, Flyway guard/runtime 표준 반영 |
 | 2026-06-04 | W4 Step 11 커뮤니티 공유/신고 E2E 테스트 및 회귀 검증 완료 |
 | 2026-06-04 | W4 Step 10 게이미피케이션 E2E 테스트 및 회귀 검증 완료 |
 | 2026-06-04 | W4 Step 9 Kafka Consumer/Producer 통합 검증 및 DLQ 재처리 정책 반영 |
