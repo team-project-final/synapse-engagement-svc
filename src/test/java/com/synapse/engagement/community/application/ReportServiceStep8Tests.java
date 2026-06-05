@@ -2,6 +2,7 @@ package com.synapse.engagement.community.application;
 
 import com.synapse.engagement.community.api.dto.ReportCreateRequest;
 import com.synapse.engagement.community.api.dto.ReportModerateRequest;
+import com.synapse.engagement.community.application.event.CommunityNotificationPublisher;
 import com.synapse.engagement.community.domain.Report;
 import com.synapse.engagement.community.domain.ReportStatus;
 import com.synapse.engagement.community.domain.ReportTargetType;
@@ -22,11 +23,13 @@ class ReportServiceStep8Tests {
     private final ReportRepository reportRepository = mock(ReportRepository.class);
     private final SharedContentService sharedContentService = mock(SharedContentService.class);
     private final GroupService groupService = mock(GroupService.class);
+    private final CommunityNotificationPublisher publisher = mock(CommunityNotificationPublisher.class);
     private final ReportService reportService = new ReportService(reportRepository, sharedContentService, groupService);
     private final ModerationService moderationService = new ModerationService(
             reportRepository,
             sharedContentService,
-            groupService
+            groupService,
+            publisher
     );
 
     @Test
@@ -49,7 +52,8 @@ class ReportServiceStep8Tests {
 
         var response = moderationService.moderate(
                 1L,
-                new ReportModerateRequest(ReportStatus.APPROVED, "hidden")
+                new ReportModerateRequest(ReportStatus.APPROVED, "hidden"),
+                "default"
         );
 
         assertThat(response.status()).isEqualTo(ReportStatus.APPROVED);
@@ -65,7 +69,8 @@ class ReportServiceStep8Tests {
 
         var response = moderationService.moderate(
                 2L,
-                new ReportModerateRequest(ReportStatus.REJECTED, "not a violation")
+                new ReportModerateRequest(ReportStatus.REJECTED, "not a violation"),
+                "default"
         );
 
         assertThat(response.status()).isEqualTo(ReportStatus.REJECTED);

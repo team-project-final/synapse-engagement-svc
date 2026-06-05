@@ -76,6 +76,13 @@ public class SharedContentService {
     }
 
     @Transactional(readOnly = true)
+    public Long findOwnerId(ReportTargetType targetType, Long sharedContentId) {
+        var content = sharedContentRepository.findByIdAndDeletedAtIsNull(sharedContentId)
+                .orElseThrow(() -> new NotFoundException("Shared content not found: id=" + sharedContentId));
+        return content.getOwnerId();
+    }
+
+    @Transactional(readOnly = true)
     public void requireReportableContent(ReportTargetType targetType, Long sharedContentId) {
         findActiveContentForReport(targetType, sharedContentId);
     }

@@ -76,6 +76,13 @@ public class GroupService {
     }
 
     @Transactional(readOnly = true)
+    public Long findOwnerId(Long groupId) {
+        var group = groupRepository.findByIdAndDeletedAtIsNull(groupId)
+                .orElseThrow(() -> new NotFoundException("Group not found: id=" + groupId));
+        return group.getOwnerId();
+    }
+
+    @Transactional(readOnly = true)
     public void requireReportableGroup(Long groupId) {
         findActiveGroup(groupId);
     }
