@@ -2,6 +2,7 @@ package com.synapse.engagement.gamification.application.event;
 
 import com.synapse.engagement.BadgeEarned;
 import com.synapse.engagement.LevelUp;
+import com.synapse.platform.NotificationSend;
 import com.synapse.engagement.gamification.api.dto.BadgeResponse;
 import com.synapse.engagement.gamification.domain.BadgeConditionType;
 import org.apache.avro.specific.SpecificRecord;
@@ -19,13 +20,14 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 class GamificationKafkaAclSimulationTests {
     @Test
-    void producerUsesOnlyAllowedGamificationTopicsWithTenantPartitionKey() {
+    void producerWritesGamificationAndNotificationTopicsWithTenantPartitionKey() {
         @SuppressWarnings("unchecked")
         KafkaTemplate<String, SpecificRecord> kafkaTemplate = mock(KafkaTemplate.class);
         var producer = new GamificationKafkaProducer(
                 kafkaTemplate,
                 "engagement.gamification.level-up-v1",
-                "engagement.gamification.badge-earned-v1"
+                "engagement.gamification.badge-earned-v1",
+                "platform.notification.notification-send-v1"
         );
 
         producer.publishLevelUp(70L, "tenant-acl", 1, 2, 120);
@@ -45,6 +47,7 @@ class GamificationKafkaAclSimulationTests {
 
         var levelUpCaptor = ArgumentCaptor.forClass(SpecificRecord.class);
         var badgeEarnedCaptor = ArgumentCaptor.forClass(SpecificRecord.class);
+        var notificationCaptor = ArgumentCaptor.forClass(SpecificRecord.class);
         verify(kafkaTemplate).send(
                 eq("engagement.gamification.level-up-v1"),
                 eq("tenant-acl"),
@@ -55,9 +58,16 @@ class GamificationKafkaAclSimulationTests {
                 eq("tenant-acl"),
                 badgeEarnedCaptor.capture()
         );
+        // 레벨업 시 platform 알림 버스로도 발행한다(F10). engagement→notification-send는 허용 페어.
+        verify(kafkaTemplate).send(
+                eq("platform.notification.notification-send-v1"),
+                eq("tenant-acl"),
+                notificationCaptor.capture()
+        );
         verifyNoMoreInteractions(kafkaTemplate);
 
         assertThat(levelUpCaptor.getValue()).isInstanceOf(LevelUp.class);
         assertThat(badgeEarnedCaptor.getValue()).isInstanceOf(BadgeEarned.class);
+        assertThat(notificationCaptor.getValue()).isInstanceOf(NotificationSend.class);
     }
 }
