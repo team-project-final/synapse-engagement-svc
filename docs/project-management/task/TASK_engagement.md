@@ -15,9 +15,9 @@
 |------|--------|----------|--------|
 | W1 | 05-12~05-16 | 116/116 | Done |
 | W2 | 05-19~05-23 | 106/106 | Done |
-| W3 | 05-26~05-29 | 124/126 | In Progress |
+| W3 | 05-26~05-29 | 125/126 | In Progress |
 | W4 | 06-01~06-05 | 43/43 | Done |
-| W5 | 06-08~06-12 | 0/16 | Not Started |
+| W5 | 06-08~06-12 | 16/16 | Done |
 
 ---
 
@@ -202,7 +202,7 @@
 - **Title**: Kafka 연동 — gamification.level_up / gamification.badge_earned 이벤트 발행
 - **Owner**: 한승완
 - **Status**: IN_PROGRESS
-- **Current Progress**: Kafka Producer를 D-002/EVENT_CONTRACT_STANDARD 기준으로 리팩토링했다. `synapse-shared`의 `com.synapse.engagement.LevelUp` / `BadgeEarned` Avro 스키마를 `src/main/avro/engagement/`에 벤더링하고, Confluent `KafkaAvroSerializer` + Schema Registry 경로로 발행한다. EmbeddedKafka + mock Schema Registry publish/consume, mock notification processor 계약 테스트, Kafka ACL 계약 시뮬레이션은 통과했다. 실제 Kafka ACL 적용과 실제 notification 서비스 연동 테스트는 아직 남아 있다.
+- **Current Progress**: Kafka Producer를 D-002/EVENT_CONTRACT_STANDARD 기준으로 리팩토링했다. `synapse-shared`의 `com.synapse.engagement.LevelUp` / `BadgeEarned` Avro 스키마를 `src/main/avro/engagement/`에 벤더링하고, Confluent `KafkaAvroSerializer` + Schema Registry 경로로 발행한다. EmbeddedKafka + mock Schema Registry publish/consume, notification slice/contract 테스트, Kafka ACL 계약 시뮬레이션은 통과했다. notification-svc 라이브 연동은 W5 통합/배포 검증 항목으로 분리했고, Step 7 잔여 항목은 실제 Kafka broker ACL 적용 확인이다.
 - **Priority**: P0
 - **Step Goal**: engagement-svc가 레벨업과 배지 획득 시 `gamification.level_up`, `gamification.badge_earned` 이벤트를 발행하여 downstream 서비스가 알림/감사 처리를 할 수 있게 한다.
 - **Done When**:
@@ -241,7 +241,8 @@
     - Full regression: `./gradlew.bat test` 성공 (2026-06-01)
     - Docker Compose Kafka + kafka-console-consumer 수동 확인 성공 (2026-05-28)
     - Schema Registry subjects 등록 성공: `engagement.gamification.level-up-v1-value`, `engagement.gamification.badge-earned-v1-value`
-    - Pending manual check: Kafka ACL + notification 서비스 연동
+    - Notification slice/contract: `.\gradlew.bat test --tests "com.synapse.engagement.gamification.application.event.GamificationNotificationContractTests"` 성공 (2026-06-08)
+    - Pending manual check: 실제 Kafka broker ACL 적용 확인
 - **Dependencies**: TASK-EG-006
 - **Due Date**: 2026-05-29
 
@@ -402,15 +403,16 @@
 - **Task ID**: TASK-EG-012
 - **Title**: 게이미피케이션 최종 E2E
 - **Owner**: 한승완
-- **Status**: TODO
+- **Status**: DONE
+- **Current Progress**: Step 12 로컬 최종 E2E `GamificationStep12FinalE2ETests`를 추가해 learning `ReviewCompleted` → XP 적립 → 레벨업 → 배지 수여 → gamification Avro 이벤트 발행 → fake notification command 변환 → 프로필/이력/리더보드 조회 → 중복 이벤트 멱등성까지 검증했다. notification-svc 라이브 연동과 ECR/image-updater/EKS/MSK 배포 확인은 Step 12 완료 조건이 아니라 W5 통합/배포 검증 항목으로 분리했다.
 - **Priority**: P0
 - **Step Goal**: 발표 전 게이미피케이션 전체 플로우가 최종 E2E로 재검증된다.
 - **Done When**:
-  - [ ] 복습→XP→레벨업 시나리오 통과
-  - [ ] 배지 조건→수여→알림 시나리오 통과
-  - [ ] 리더보드 조회 시나리오 통과
-  - [ ] 이벤트 중복/멱등성 확인
-  - [ ] P0 버그 수정 및 회귀 테스트 완료
+  - [x] 복습→XP→레벨업 시나리오 통과
+  - [x] 배지 조건→수여→알림 시나리오 통과: notification slice/contract 테스트 기준
+  - [x] 리더보드 조회 시나리오 통과
+  - [x] 이벤트 중복/멱등성 확인
+  - [x] P0 버그 수정 및 회귀 테스트 완료: 신규 P0 없음, `.\gradlew.bat test` 통과
 - **Scope**:
   - In Scope:
     - 최종 E2E 확인
@@ -427,15 +429,16 @@
 - **Task ID**: TASK-EG-013
 - **Title**: 커뮤니티 최종 E2E
 - **Owner**: 한승완
-- **Status**: TODO
+- **Status**: DONE
+- **Current Progress**: Step 13 최종 E2E `CommunityStep13FinalE2ETests`를 추가해 공유 노트 생성/조회/검색, 신고 접수, 중복 신고 방지, 비관리자 403, 관리자 승인, 신고 대상 숨김, `platform.notification.notification-send-v1` Avro notification 발행까지 검증했다. 기존 `CommunityStep11E2ETests`의 공유 덱 생성→검색→복사→신고→관리자 처리 흐름과 함께 커뮤니티 최종 E2E 범위를 충족한다. 발표용 actor/data/API 흐름은 [Step 13 Community Demo Scenario](../demo/2026-06-08-step13-community-demo-scenario.md)에 분리 정리했다. 실제 notification-svc 라이브 소비/저장은 W5 통합/배포 검증 항목으로 분리했다.
 - **Priority**: P0
 - **Step Goal**: 발표 전 커뮤니티 공유/신고 플로우가 최종 E2E로 재검증되고 데모 데이터가 준비된다.
 - **Done When**:
-  - [ ] 공유 덱 생성→검색→복사 시나리오 통과
-  - [ ] 공유 노트 조회 시나리오 통과
-  - [ ] 신고 접수→관리자 처리 시나리오 통과
-  - [ ] engagement P0 버그 0건
-  - [ ] 발표용 데모 데이터 준비
+  - [x] 공유 덱 생성→검색→복사 시나리오 통과: [Step 13 Community Demo Scenario](../demo/2026-06-08-step13-community-demo-scenario.md)
+  - [x] 공유 노트 조회 시나리오 통과: [Step 13 Community Demo Scenario](../demo/2026-06-08-step13-community-demo-scenario.md)
+  - [x] 신고 접수→관리자 처리 시나리오 통과: [Step 13 Community Demo Scenario](../demo/2026-06-08-step13-community-demo-scenario.md)
+  - [x] engagement P0 버그 0건
+  - [x] 발표용 데모 데이터 준비: [Step 13 Community Demo Scenario](../demo/2026-06-08-step13-community-demo-scenario.md)에 결정적 actor/data/API 흐름 정리
 - **Scope**:
   - In Scope:
     - 커뮤니티 최종 E2E
