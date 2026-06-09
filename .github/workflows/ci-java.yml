@@ -46,6 +46,7 @@ jobs:
       - name: Grant execute permission
         run: chmod +x gradlew
       - name: Log in to Docker Hub
+        # Docker Hub 익명 pull은 공유 러너 IP에서 쉽게 rate-limit 된다. 인증 후 compose 이미지를 pull한다.
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}

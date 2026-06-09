@@ -4,6 +4,10 @@ spring:
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
   flyway:
+    # 서비스별 마이그레이션 branch merge 순서가 달라도 누락 없이 적용되도록 shared Flyway 표준을 따른다.
+    out-of-order: true
+    # engagement는 기존 DB를 baseline 처리하지 않고, 명시된 migration history로 스키마를 관리한다.
+    baseline-on-migrate: false
     locations:
       - classpath:db/migration/community/group
       - classpath:db/migration/community/group/member
@@ -15,6 +19,9 @@ spring:
     # (미설정 시 localhost:9092 폴백). 배포 환경은 base가 kafka-brokers ConfigMap 값을 주입한다.
     # 단, 실제 소비/발행은 synapse.kafka.enabled=true(KAFKA_ENABLED) 일 때만 동작한다.
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    security:
+      # EKS/MSK는 SSL, 로컬 compose는 PLAINTEXT. 커스텀 Kafka config가 이 값을 직접 props에 넣는다.
+      protocol: ${KAFKA_SECURITY_PROTOCOL:PLAINTEXT}
     consumer:
       group-id: ${KAFKA_CONSUMER_GROUP_ID:engagement-svc-group}
       auto-offset-reset: earliest

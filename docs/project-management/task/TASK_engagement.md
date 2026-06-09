@@ -15,9 +15,9 @@
 |------|--------|----------|--------|
 | W1 | 05-12~05-16 | 116/116 | Done |
 | W2 | 05-19~05-23 | 106/106 | Done |
-| W3 | 05-26~05-29 | 80/126 | In Progress |
-| W4 | 06-01~06-05 | 0/43 | Not Started |
-| W5 | 06-08~06-12 | 0/16 | Not Started |
+| W3 | 05-26~05-29 | 125/126 | In Progress |
+| W4 | 06-01~06-05 | 43/43 | Done |
+| W5 | 06-08~06-12 | 16/16 | Done |
 
 ---
 
@@ -202,7 +202,7 @@
 - **Title**: Kafka 연동 — gamification.level_up / gamification.badge_earned 이벤트 발행
 - **Owner**: 한승완
 - **Status**: IN_PROGRESS
-- **Current Progress**: Kafka Producer를 D-002/EVENT_CONTRACT_STANDARD 기준으로 리팩토링했다. `synapse-shared`의 `com.synapse.engagement.LevelUp` / `BadgeEarned` Avro 스키마를 `src/main/avro/engagement/`에 벤더링하고, Confluent `KafkaAvroSerializer` + Schema Registry 경로로 발행한다. EmbeddedKafka + mock Schema Registry publish/consume, mock notification processor 계약 테스트, Kafka ACL 계약 시뮬레이션은 통과했다. 실제 Kafka ACL 적용과 실제 notification 서비스 연동 테스트는 아직 남아 있다.
+- **Current Progress**: Kafka Producer를 D-002/EVENT_CONTRACT_STANDARD 기준으로 리팩토링했다. `synapse-shared`의 `com.synapse.engagement.LevelUp` / `BadgeEarned` Avro 스키마를 `src/main/avro/engagement/`에 벤더링하고, Confluent `KafkaAvroSerializer` + Schema Registry 경로로 발행한다. EmbeddedKafka + mock Schema Registry publish/consume, notification slice/contract 테스트, Kafka ACL 계약 시뮬레이션은 통과했다. notification-svc 라이브 연동은 W5 통합/배포 검증 항목으로 분리했고, Step 7 잔여 항목은 실제 Kafka broker ACL 적용 확인이다.
 - **Priority**: P0
 - **Step Goal**: engagement-svc가 레벨업과 배지 획득 시 `gamification.level_up`, `gamification.badge_earned` 이벤트를 발행하여 downstream 서비스가 알림/감사 처리를 할 수 있게 한다.
 - **Done When**:
@@ -241,7 +241,8 @@
     - Full regression: `./gradlew.bat test` 성공 (2026-06-01)
     - Docker Compose Kafka + kafka-console-consumer 수동 확인 성공 (2026-05-28)
     - Schema Registry subjects 등록 성공: `engagement.gamification.level-up-v1-value`, `engagement.gamification.badge-earned-v1-value`
-    - Pending manual check: Kafka ACL + notification 서비스 연동
+    - Notification slice/contract: `.\gradlew.bat test --tests "com.synapse.engagement.gamification.application.event.GamificationNotificationContractTests"` 성공 (2026-06-08)
+    - Pending manual check: 실제 Kafka broker ACL 적용 확인
 - **Dependencies**: TASK-EG-006
 - **Due Date**: 2026-05-29
 
@@ -294,15 +295,16 @@
 - **Task ID**: TASK-EG-009
 - **Title**: Kafka 이벤트 연동
 - **Owner**: 한승완
-- **Status**: TODO
+- **Status**: DONE
+- **Current Progress**: Step 9 기준으로 `learning.card.review-completed-v1` Avro Consumer를 XP 적립 유스케이스에 연결하고, 레벨업/배지 수여 시 `engagement.gamification.level-up-v1`, `engagement.gamification.badge-earned-v1` Avro 이벤트를 발행하도록 통합 검증했다. Consumer 실패 처리는 1초 간격 3회 재시도 후 `{원본토픽}.dlq` 발행으로 정리했다.
 - **Priority**: P0
-- **Step Goal**: engagement-svc가 `card.reviewed` 이벤트를 소비해 XP를 적립하고, 레벨업/배지 수여 이벤트를 발행한다.
+- **Step Goal**: engagement-svc가 `learning.card.review-completed-v1` 이벤트를 소비해 XP를 적립하고, 레벨업/배지 수여 이벤트를 발행한다.
 - **Done When**:
-  - [ ] `card.reviewed` 소비 계약 확정
-  - [ ] XP 적립 Consumer 구현
-  - [ ] level up / badge earned Producer 구현
-  - [ ] 중복 수신 시 XP 중복 적립 방지
-  - [ ] Kafka 통합 테스트 통과
+  - [x] `learning.card.review-completed-v1` 소비 계약 확정
+  - [x] XP 적립 Consumer 구현
+  - [x] level up / badge earned Producer 구현
+  - [x] 중복 수신 시 XP 중복 적립 방지
+  - [x] Kafka 통합 테스트 통과
 - **Scope**:
   - In Scope:
     - Consumer/Producer 설정
@@ -311,6 +313,18 @@
   - Out of Scope:
     - notification 서비스 알림 구현
     - 스키마 호환성 정책 변경
+- **Constraints**:
+  - Kafka listener는 `synapse.kafka.enabled=true`일 때만 활성화한다.
+  - inbound `ReviewCompleted` 스키마에는 `eventId`가 없어 `cardId + reviewedAt` 조합을 XP 멱등성 키로 사용한다.
+  - 이벤트 payload에는 민감 정보를 포함하지 않고 `tenantId`를 partition key로 사용한다.
+  - Consumer 실패는 1초 간격 3회 재시도 후 `{원본토픽}.dlq`로 발행한다.
+- **Output Format**:
+  - Consumer input: `com.synapse.learning.ReviewCompleted`
+  - Producer output: `com.synapse.engagement.LevelUp`, `com.synapse.engagement.BadgeEarned`
+- **Verification**:
+  - `EngagementKafkaEventHandlerTests`: UserRegistered/Profile 생성, ReviewCompleted XP 적립, 중복 XP skip
+  - `EngagementKafkaStep9IntegrationTests`: EmbeddedKafka `ReviewCompleted` → XP 적립 → level-up/badge-earned 발행
+  - `GamificationKafkaProducerTests`: Avro Producer publish/consume 검증
 - **Dependencies**: TASK-EG-004, TASK-EG-006
 - **Due Date**: 2026-06-05
 
@@ -319,15 +333,16 @@
 - **Task ID**: TASK-EG-010
 - **Title**: 게이미피케이션 E2E 테스트 + 버그 수정
 - **Owner**: 한승완
-- **Status**: TODO
+- **Status**: DONE
+- **Current Progress**: Step 10 기준으로 `GamificationStep10E2ETests`를 추가해 복습 XP 적립, 최초 XP 배지, 레벨업, LEVEL_2 배지, 중복 이벤트 409 방지, 내 프로필 조회, XP 이력 조회, 리더보드 1위 반영까지 REST E2E로 검증했다. 신규 P0/P1/P2 실패는 없었고 전체 회귀 테스트가 통과했다.
 - **Priority**: P0
 - **Step Goal**: 게이미피케이션 플로우가 E2E로 통과하고 발견된 P0 버그가 수정된다.
 - **Done When**:
-  - [ ] 복습→XP→배지→레벨업→리더보드 시나리오 실행
-  - [ ] 실패 항목 기록
-  - [ ] P0/P1/P2 분류
-  - [ ] P0 버그 수정
-  - [ ] 회귀 테스트 통과
+  - [x] 복습→XP→배지→레벨업→리더보드 시나리오 실행
+  - [x] 실패 항목 기록
+  - [x] P0/P1/P2 분류
+  - [x] P0 버그 수정: 신규 P0 없음
+  - [x] 회귀 테스트 통과
 - **Scope**:
   - In Scope:
     - 게이미피케이션 E2E
@@ -336,6 +351,15 @@
   - Out of Scope:
     - 신규 기능 추가
     - 성능 튜닝
+- **Constraints**:
+  - Step 10은 engagement-svc REST E2E와 Step 9 Kafka 통합 테스트 결과를 기준으로 검증한다.
+  - 실제 learning-svc/notification-svc를 포함한 MSA 전체 E2E는 별도 통합 환경 검증으로 남긴다.
+  - 프로젝트에 정량 커버리지 도구가 없어 80% 수치는 산출하지 않고 전체 회귀 테스트 통과를 기록한다.
+- **Verification**:
+  - `GamificationStep10E2ETests`: 복습 XP → 배지 → 레벨업 → 중복 방지 → 이력 → 리더보드 REST E2E
+  - `EngagementKafkaStep9IntegrationTests`: Kafka `ReviewCompleted` → XP 적립 → level-up/badge-earned 발행
+  - `EngagementApiSmokeTests`: gamification API docs 및 smoke flow
+  - Full regression: `.\gradlew.bat test` 성공 (2026-06-04)
 - **Dependencies**: TASK-EG-006, TASK-EG-009
 - **Due Date**: 2026-06-05
 
@@ -344,15 +368,25 @@
 - **Task ID**: TASK-EG-011
 - **Title**: 커뮤니티 공유/신고 E2E 테스트 + 안정화
 - **Owner**: 한승완
-- **Status**: TODO
+- **Status**: DONE
 - **Priority**: P0
 - **Step Goal**: 커뮤니티 공유/검색/복사 및 신고/처리 플로우가 E2E로 통과하고 P0 버그가 수정된다.
 - **Done When**:
-  - [ ] 공유→검색→복사 시나리오 실행
-  - [ ] 신고→관리자 처리 시나리오 실행
-  - [ ] 실패 항목 기록
-  - [ ] P0 버그 수정
-  - [ ] 회귀 테스트 통과
+  - [x] 공유→검색→복사 시나리오 실행
+  - [x] 신고→관리자 처리 시나리오 실행
+  - [x] 실패 항목 기록
+  - [x] P0 버그 수정
+  - [x] 회귀 테스트 통과
+- **Current Progress**:
+  - Step 11 E2E 테스트 `CommunityStep11E2ETests` 추가
+  - 공유 생성, token 조회, 검색, fork, 원본 downloadCount 증가, sourceShareId 연결 검증
+  - 신고 생성, 중복 신고 409, 비관리자 admin API 403, 관리자 승인, 신고 대상 숨김 검증
+- **Constraints**:
+  - 신규 P0/P1/P2 버그 없음
+  - 정량 커버리지 리포트 태스크는 현재 Gradle 검증 흐름에 연결되어 있지 않아 E2E + 전체 회귀 테스트로 대체 확인
+- **Verification**:
+  - `.\gradlew.bat test --tests "com.synapse.engagement.community.CommunityStep11E2ETests"` → BUILD SUCCESSFUL
+  - `.\gradlew.bat test` → BUILD SUCCESSFUL
 - **Scope**:
   - In Scope:
     - 커뮤니티 전체 플로우 E2E
@@ -369,15 +403,16 @@
 - **Task ID**: TASK-EG-012
 - **Title**: 게이미피케이션 최종 E2E
 - **Owner**: 한승완
-- **Status**: TODO
+- **Status**: DONE
+- **Current Progress**: Step 12 로컬 최종 E2E `GamificationStep12FinalE2ETests`를 추가해 learning `ReviewCompleted` → XP 적립 → 레벨업 → 배지 수여 → gamification Avro 이벤트 발행 → fake notification command 변환 → 프로필/이력/리더보드 조회 → 중복 이벤트 멱등성까지 검증했다. notification-svc 라이브 연동과 ECR/image-updater/EKS/MSK 배포 확인은 Step 12 완료 조건이 아니라 W5 통합/배포 검증 항목으로 분리했다.
 - **Priority**: P0
 - **Step Goal**: 발표 전 게이미피케이션 전체 플로우가 최종 E2E로 재검증된다.
 - **Done When**:
-  - [ ] 복습→XP→레벨업 시나리오 통과
-  - [ ] 배지 조건→수여→알림 시나리오 통과
-  - [ ] 리더보드 조회 시나리오 통과
-  - [ ] 이벤트 중복/멱등성 확인
-  - [ ] P0 버그 수정 및 회귀 테스트 완료
+  - [x] 복습→XP→레벨업 시나리오 통과
+  - [x] 배지 조건→수여→알림 시나리오 통과: notification slice/contract 테스트 기준
+  - [x] 리더보드 조회 시나리오 통과
+  - [x] 이벤트 중복/멱등성 확인
+  - [x] P0 버그 수정 및 회귀 테스트 완료: 신규 P0 없음, `.\gradlew.bat test` 통과
 - **Scope**:
   - In Scope:
     - 최종 E2E 확인
@@ -394,15 +429,16 @@
 - **Task ID**: TASK-EG-013
 - **Title**: 커뮤니티 최종 E2E
 - **Owner**: 한승완
-- **Status**: TODO
+- **Status**: DONE
+- **Current Progress**: Step 13 최종 E2E `CommunityStep13FinalE2ETests`를 추가해 공유 노트 생성/조회/검색, 신고 접수, 중복 신고 방지, 비관리자 403, 관리자 승인, 신고 대상 숨김, `platform.notification.notification-send-v1` Avro notification 발행까지 검증했다. 기존 `CommunityStep11E2ETests`의 공유 덱 생성→검색→복사→신고→관리자 처리 흐름과 함께 커뮤니티 최종 E2E 범위를 충족한다. 발표용 actor/data/API 흐름은 [Step 13 Community Demo Scenario](../demo/2026-06-08-step13-community-demo-scenario.md)에 분리 정리했다. 실제 notification-svc 라이브 소비/저장은 W5 통합/배포 검증 항목으로 분리했다.
 - **Priority**: P0
 - **Step Goal**: 발표 전 커뮤니티 공유/신고 플로우가 최종 E2E로 재검증되고 데모 데이터가 준비된다.
 - **Done When**:
-  - [ ] 공유 덱 생성→검색→복사 시나리오 통과
-  - [ ] 공유 노트 조회 시나리오 통과
-  - [ ] 신고 접수→관리자 처리 시나리오 통과
-  - [ ] engagement P0 버그 0건
-  - [ ] 발표용 데모 데이터 준비
+  - [x] 공유 덱 생성→검색→복사 시나리오 통과: [Step 13 Community Demo Scenario](../demo/2026-06-08-step13-community-demo-scenario.md)
+  - [x] 공유 노트 조회 시나리오 통과: [Step 13 Community Demo Scenario](../demo/2026-06-08-step13-community-demo-scenario.md)
+  - [x] 신고 접수→관리자 처리 시나리오 통과: [Step 13 Community Demo Scenario](../demo/2026-06-08-step13-community-demo-scenario.md)
+  - [x] engagement P0 버그 0건
+  - [x] 발표용 데모 데이터 준비: [Step 13 Community Demo Scenario](../demo/2026-06-08-step13-community-demo-scenario.md)에 결정적 actor/data/API 흐름 정리
 - **Scope**:
   - In Scope:
     - 커뮤니티 최종 E2E

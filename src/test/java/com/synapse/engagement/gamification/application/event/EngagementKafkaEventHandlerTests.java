@@ -33,12 +33,14 @@ class EngagementKafkaEventHandlerTests {
     void userRegisteredCreatesGamificationProfileWhenMissing() {
         when(profileRepository.existsById(700L)).thenReturn(false);
 
-        handler.handleUserRegistered(new UserRegistered(
-                "700",
-                "user700@example.com",
-                "tenant-a",
-                "2026-06-02T00:00:00Z"
-        ));
+        handler.handleUserRegistered(UserRegistered.newBuilder()
+                .setEventId("evt-700")
+                .setTenantId("tenant-a")
+                .setOccurredAt(1748822400000L)
+                .setUserId("700")
+                .setEmail("user700@example.com")
+                .setDisplayName("User 700")
+                .build());
 
         var profileCaptor = ArgumentCaptor.forClass(UserProfilesGamification.class);
         verify(profileRepository).save(profileCaptor.capture());
@@ -51,12 +53,14 @@ class EngagementKafkaEventHandlerTests {
     void userRegisteredIsIdempotentWhenProfileAlreadyExists() {
         when(profileRepository.existsById(700L)).thenReturn(true);
 
-        handler.handleUserRegistered(new UserRegistered(
-                "700",
-                "user700@example.com",
-                "tenant-a",
-                "2026-06-02T00:00:00Z"
-        ));
+        handler.handleUserRegistered(UserRegistered.newBuilder()
+                .setEventId("evt-700")
+                .setTenantId("tenant-a")
+                .setOccurredAt(1748822400000L)
+                .setUserId("700")
+                .setEmail("user700@example.com")
+                .setDisplayName("User 700")
+                .build());
 
         verify(profileRepository, never()).save(any());
     }

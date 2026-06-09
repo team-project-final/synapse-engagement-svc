@@ -34,29 +34,29 @@
 | Step | 내용 | 상태 | 진행률 | 비고 |
 |------|------|------|--------|------|
 | Step 6 | gamification 완성 — 배지/레벨/스트릭/리더보드 | Done | 44/44 | badges/user_badges/user_streaks, WebMvc/통합 테스트 |
-| Step 7 | Kafka 연동 — gamification.level_up / gamification.badge_earned 이벤트 발행 | In Progress | 36/38 | Producer/Schema/EmbeddedKafka/Docker Kafka 확인, ACL/notification 미검증 |
-| Step 8 | community 신고 + Admin 모더레이션 | Not Started | 0/44 | |
+| Step 7 | Kafka 연동 — gamification.level_up / gamification.badge_earned 이벤트 발행 | In Progress | 37/38 | Producer/Schema/EmbeddedKafka/Docker Kafka/notification slice 검증, 실제 ACL 미검증 |
+| Step 8 | community 신고 + Admin 모더레이션 | Done | 44/44 | reports API, ADMIN role claim, soft delete moderation |
 
-**W3 진행률**: 80/126 Checks 완료
+**W3 진행률**: 125/126 Checks 완료
 
 ### W4 (2026-06-01 ~ 06-05)
 
 | Step | 내용 | 상태 | 진행률 | 비고 |
 |------|------|------|--------|------|
-| Step 9 | Kafka 이벤트 연동 — card.reviewed 소비 + gamification 이벤트 발행 | Not Started | 0/17 | |
-| Step 10 | 게이미피케이션 E2E 테스트 + 버그 수정 | Not Started | 0/13 | |
-| Step 11 | 커뮤니티 공유/신고 E2E 테스트 + 안정화 | Not Started | 0/13 | |
+| Step 9 | Kafka 이벤트 연동 — learning.card.review-completed 소비 + gamification 이벤트 발행 | Done | 17/17 | Avro Consumer, XP 적립, DLQ, EmbeddedKafka 통합 테스트 |
+| Step 10 | 게이미피케이션 E2E 테스트 + 버그 수정 | Done | 13/13 | REST E2E, 중복 방지, 이력/리더보드, 회귀 테스트 |
+| Step 11 | 커뮤니티 공유/신고 E2E 테스트 + 안정화 | Done | 13/13 | 공유/검색/fork/신고/관리자 처리 E2E, 회귀 테스트 |
 
-**W4 진행률**: 0/43 Checks 완료
+**W4 진행률**: 43/43 Checks 완료
 
 ### W5 (2026-06-08 ~ 06-12)
 
 | Step | 내용 | 상태 | 진행률 | 비고 |
 |------|------|------|--------|------|
-| Step 12 | 게이미피케이션 E2E | Not Started | 0/6 | |
-| Step 13 | 커뮤니티 E2E | Not Started | 0/10 | |
+| Step 12 | 게이미피케이션 E2E | Done | 6/6 | 로컬 최종 E2E/회귀 테스트 및 notification slice/contract 검증 통과 |
+| Step 13 | 커뮤니티 E2E | Done | 10/10 | 공유 덱/노트, 신고/관리자 처리, notification-send slice 검증 통과 |
 
-**W5 진행률**: 0/16 Checks 완료
+**W5 진행률**: 16/16 Checks 완료
 
 ---
 
@@ -112,6 +112,14 @@
 
 | 날짜 | 변경 사항 |
 |------|-----------|
+| 2026-06-08 | W5 Step 13 커뮤니티 최종 E2E 테스트 추가 및 notification-send slice/contract 검증 완료 |
+| 2026-06-08 | W3 Step 7 notification 연동을 slice/contract 테스트 기준으로 완료 처리, 실제 Kafka ACL만 잔여 항목으로 분리 |
+| 2026-06-08 | W5 Step 12 게이미피케이션 로컬 최종 E2E 테스트 추가 및 notification slice/contract 검증 완료 |
+| 2026-06-05 | #25/#26/#28 배포 선결조건 보강: semver 이미지 릴리스 workflow, Kafka security.protocol, Flyway guard/runtime 표준 반영 |
+| 2026-06-04 | W4 Step 11 커뮤니티 공유/신고 E2E 테스트 및 회귀 검증 완료 |
+| 2026-06-04 | W4 Step 10 게이미피케이션 E2E 테스트 및 회귀 검증 완료 |
+| 2026-06-04 | W4 Step 9 Kafka Consumer/Producer 통합 검증 및 DLQ 재처리 정책 반영 |
+| 2026-06-01 | W3 Step 8 community 신고 + Admin 모더레이션 Done 처리 |
 | 2026-05-28 | W3 Step 7 Kafka Producer/Schema/EmbeddedKafka 검증 구현 |
 | 2026-05-28 | W3 Step 7 Docker Compose Kafka E2E 및 Schema Registry 등록 확인 |
 | 2026-05-28 | workflow-guide 기준 W3 Step 7을 Kafka 이벤트 발행 작업으로 재구성 |

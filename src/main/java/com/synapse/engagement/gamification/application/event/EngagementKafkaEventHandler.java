@@ -6,15 +6,13 @@ import com.synapse.engagement.gamification.domain.EventType;
 import com.synapse.engagement.gamification.domain.UserProfilesGamification;
 import com.synapse.engagement.gamification.repository.UserProfilesGamificationRepository;
 import com.synapse.engagement.shared.ConflictException;
+import com.synapse.engagement.shared.CurrentUser;
 import com.synapse.learning.ReviewCompleted;
 import com.synapse.platform.UserRegistered;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.nio.charset.StandardCharsets;
-import java.util.UUID;
 
 @Service
 public class EngagementKafkaEventHandler {
@@ -67,12 +65,7 @@ public class EngagementKafkaEventHandler {
     }
 
     private Long resolveUserId(CharSequence externalUserId) {
-        var value = externalUserId == null ? "" : externalUserId.toString();
-        try {
-            return Long.valueOf(value);
-        } catch (NumberFormatException ignored) {
-            var uuid = UUID.nameUUIDFromBytes(value.getBytes(StandardCharsets.UTF_8));
-            return uuid.getMostSignificantBits() & Long.MAX_VALUE;
-        }
+        // HTTP 경로(CurrentUser.require)와 동일한 도출을 공유해 신원이 분기되지 않도록 한다.
+        return CurrentUser.resolveUserId(externalUserId == null ? null : externalUserId.toString());
     }
 }
