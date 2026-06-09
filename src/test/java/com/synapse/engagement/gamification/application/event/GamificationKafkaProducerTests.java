@@ -2,6 +2,7 @@ package com.synapse.engagement.gamification.application.event;
 
 import com.synapse.engagement.BadgeEarned;
 import com.synapse.engagement.LevelUp;
+import com.synapse.platform.NotificationSend;
 import com.synapse.engagement.gamification.api.dto.BadgeResponse;
 import com.synapse.engagement.gamification.domain.BadgeConditionType;
 import io.confluent.kafka.serializers.KafkaAvroDeserializer;
@@ -28,7 +29,8 @@ import static org.assertj.core.api.Assertions.assertThat;
         "spring.kafka.bootstrap-servers=${spring.embedded.kafka.brokers}",
         "spring.kafka.producer.properties.schema.registry.url=mock://gamification-step7",
         "synapse.kafka.topics.level-up=engagement.gamification.level-up-v1",
-        "synapse.kafka.topics.badge-earned=engagement.gamification.badge-earned-v1"
+        "synapse.kafka.topics.badge-earned=engagement.gamification.badge-earned-v1",
+        "synapse.kafka.topics.notification-send=platform.notification.notification-send-v1"
 })
 @ActiveProfiles("test")
 @DirtiesContext
@@ -36,7 +38,8 @@ import static org.assertj.core.api.Assertions.assertThat;
         partitions = 1,
         topics = {
                 "engagement.gamification.level-up-v1",
-                "engagement.gamification.badge-earned-v1"
+                "engagement.gamification.badge-earned-v1",
+                "platform.notification.notification-send-v1"
         }
 )
 class GamificationKafkaProducerTests {
@@ -63,7 +66,8 @@ class GamificationKafkaProducerTests {
             embeddedKafka.consumeFromEmbeddedTopics(
                     consumer,
                     "engagement.gamification.level-up-v1",
-                    "engagement.gamification.badge-earned-v1"
+                    "engagement.gamification.badge-earned-v1",
+                    "platform.notification.notification-send-v1"
             );
 
             publisher.publishLevelUp(80L, "tenant-a", 1, 2, 120);
@@ -108,6 +112,20 @@ class GamificationKafkaProducerTests {
             assertThat(badgeEarnedEvent.getBadgeCode()).isEqualTo("LEVEL_2");
             assertThat(badgeEarnedEvent.getBadgeName()).isEqualTo("Level 2");
             assertThat(badgeEarnedEvent.getOccurredAt()).isPositive();
+
+            // 레벨업 시 platform 알림 버스로 NotificationSend도 발행되어야 한다 (F10, W1 알림 leg).
+            var notification = KafkaTestUtils.getSingleRecord(
+                    consumer,
+                    "platform.notification.notification-send-v1"
+            );
+            assertThat(notification.key()).isEqualTo("tenant-a");
+            assertThat(notification.value()).isInstanceOf(NotificationSend.class);
+            var notificationEvent = (NotificationSend) notification.value();
+            assertThat(notificationEvent.getEventId()).isNotBlank();
+            assertThat(notificationEvent.getTenantId()).isEqualTo("tenant-a");
+            assertThat(notificationEvent.getUserId()).isEqualTo("80");
+            assertThat(notificationEvent.getNotificationType().toString()).isEqualTo("LEVEL_UP");
+            assertThat(notificationEvent.getOccurredAt()).isPositive();
         }
     }
 }
