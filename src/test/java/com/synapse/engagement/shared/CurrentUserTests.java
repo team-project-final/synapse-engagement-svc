@@ -36,6 +36,18 @@ class CurrentUserTests {
         assertThat(CurrentUser.requireAdmin(jwt)).isEqualTo(9003L);
     }
 
+    @Test
+    void requireResolvesUuidSubjectToDeterministicLongMatchingKafkaPath() {
+        // platform이 발급하는 UUID subject도 거부하지 않고, Kafka 소비 경로와 동일한
+        // 결정적 해시로 Long을 도출한다(동일 UUID → 동일 userId).
+        var subject = "019ea9bc-fc6f-70ce-a2a2-24c9f9c4409e";
+        var expected = CurrentUser.resolveUserId(subject);
+
+        assertThat(CurrentUser.require(jwt(subject).build())).isEqualTo(expected);
+        assertThat(CurrentUser.require(jwt(subject).build()))
+                .isEqualTo(CurrentUser.require(jwt(subject).build()));
+    }
+
     private static Jwt.Builder jwt(String subject) {
         return Jwt.withTokenValue("test-token")
                 .header("alg", "none")

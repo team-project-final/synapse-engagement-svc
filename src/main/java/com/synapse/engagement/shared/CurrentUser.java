@@ -2,23 +2,39 @@ package com.synapse.engagement.shared;
 
 import org.springframework.security.oauth2.jwt.Jwt;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Objects;
+import java.util.UUID;
 
 public final class CurrentUser {
     private CurrentUser() {
     }
 
     public static Long require(Jwt jwt) {
-        // Synapse 서비스들은 JWT subject를 공통 userId로 사용한다. 여기서 숫자 변환까지 통일한다.
+        // Synapse 서비스들은 JWT subject를 공통 userId로 사용한다.
+        // 발급자(platform)는 subject를 UUID 문자열로 넣으므로, 숫자가 아니면 Kafka 소비 경로
+        // (EngagementKafkaEventHandler.resolveUserId)와 '동일한' 결정적 해시로 Long을 도출해
+        // HTTP/Kafka 두 경로가 동일 사용자에 대해 같은 userId를 갖도록 통일한다.
         if (jwt == null || jwt.getSubject() == null || jwt.getSubject().isBlank()) {
             throw new UnauthorizedException("JWT subject is required");
         }
+        return resolveUserId(jwt.getSubject());
+    }
+
+    /**
+     * 외부 userId(JWT subject 또는 이벤트 필드)를 내부 Long userId로 변환한다.
+     * 숫자면 그대로, 아니면(UUID 등) nameUUIDFromBytes 기반 결정적 해시.
+     * HTTP·Kafka 양 경로가 이 메서드를 공유해 신원 도출이 분기되지 않도록 한다.
+     */
+    public static Long resolveUserId(String externalUserId) {
+        var value = externalUserId == null ? "" : externalUserId;
         try {
-            return Long.valueOf(jwt.getSubject());
+            return Long.valueOf(value);
         } catch (NumberFormatException ex) {
-            throw new UnauthorizedException("JWT subject must be a numeric user id");
+            var uuid = UUID.nameUUIDFromBytes(value.getBytes(StandardCharsets.UTF_8));
+            return uuid.getMostSignificantBits() & Long.MAX_VALUE;
         }
     }
 
