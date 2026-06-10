@@ -60,9 +60,11 @@ class GamificationStep7EventServiceTests {
         when(badgeService.awardEligibleBadges(eq(70L), any(UserProfilesGamification.class), eq(streak)))
                 .thenReturn(List.of(badge));
 
-        service.addXp(70L, "tenant-a", request);
+        // externalUserId(platform UUID)를 그대로 전파한다(F10).
+        var externalUserId = "55555555-5555-5555-5555-555555555555";
+        service.addXp(70L, externalUserId, "tenant-a", request);
 
-        verify(eventPublisher).publishLevelUp(70L, "tenant-a", 1, 2, 110);
-        verify(eventPublisher).publishBadgeEarned(70L, "tenant-a", badge);
+        verify(eventPublisher).publishLevelUp(70L, externalUserId, "tenant-a", 1, 2, 110);
+        verify(eventPublisher).publishBadgeEarned(70L, externalUserId, "tenant-a", badge);
     }
 }

@@ -79,13 +79,93 @@ class EngagementKafkaEventHandlerTests {
         handler.handleReviewCompleted(event);
 
         var requestCaptor = ArgumentCaptor.forClass(AddXpRequest.class);
-        verify(gamificationService).addXp(eq(800L), eq("tenant-learning"), requestCaptor.capture());
+        // 원본 UUID(여기선 "800")를 externalUserId로 그대로 전달한다(F10), 내부 PK는 Long(800L).
+        verify(gamificationService).addXp(eq(800L), eq("800"), eq("tenant-learning"), requestCaptor.capture());
         var request = requestCaptor.getValue();
         assertThat(request.eventType()).isEqualTo(EventType.CARD_REVIEWED);
         assertThat(request.xpAmount()).isNull();
         assertThat(request.sourceType()).isEqualTo("card-review");
         assertThat(request.sourceId()).isEqualTo("review-completed:card-1:2026-06-02T00:00:00Z");
         assertThat(request.eventId()).isEqualTo("review-completed:card-1:2026-06-02T00:00:00Z");
+    }
+
+    @Test
+    void reviewCompletedPropagatesPlatformUuidAsExternalUserIdWhileHashingInternalPk() {
+        // 소스 userId가 platform UUID일 때: 내부 PK는 결정적 해시(Long)지만, externalUserId는
+        // 원본 UUID를 그대로 addXp에 전달해야 outbound 이벤트가 UUID userId를 싣는다(F10).
+        var uuid = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+        var event = new ReviewCompleted(
+                "card-9",
+                uuid,
+                "11112222-3333-4444-5555-666677778888",
+                Rating.GOOD,
+                "2026-06-10T00:00:00Z",
+                "2026-06-09T00:00:00Z"
+        );
+        var expectedLong = com.synapse.engagement.shared.CurrentUser.resolveUserId(uuid);
+
+        handler.handleReviewCompleted(event);
+
+        verify(gamificationService).addXp(
+                eq(expectedLong),
+                eq(uuid),
+                eq("11112222-3333-4444-5555-666677778888"),
+                any()
+        );
+    }
+
+    @Test
+    void reviewCompletedWithNullUserIdIsWarnSkippedWithoutPublishingOrThrowing() {
+        // 필수 신원(userId)이 없으면 outbound Avro의 non-null 필드를 채울 수 없다 — warn 후 스킵해야 한다.
+        var event = new ReviewCompleted(
+                "card-1",
+                null,
+                "tenant-learning",
+                Rating.GOOD,
+                "2026-06-03T00:00:00Z",
+                "2026-06-02T00:00:00Z"
+        );
+
+        assertThatCode(() -> handler.handleReviewCompleted(event)).doesNotThrowAnyException();
+        verify(gamificationService, never()).addXp(any(), any(), any(), any());
+    }
+
+    @Test
+    void reviewCompletedWithNullTenantIdIsWarnSkippedWithoutPublishingOrThrowing() {
+        // tenantId 역시 outbound Avro의 non-null 필수 필드 — null이면 warn 후 스킵한다.
+        var event = new ReviewCompleted(
+                "card-1",
+                "800",
+                null,
+                Rating.GOOD,
+                "2026-06-03T00:00:00Z",
+                "2026-06-02T00:00:00Z"
+        );
+
+        assertThatCode(() -> handler.handleReviewCompleted(event)).doesNotThrowAnyException();
+        verify(gamificationService, never()).addXp(any(), any(), any(), any());
+    }
+
+    @Test
+    void reviewCompletedWithNonUuidExternalUserIdStillProcessesWithoutThrowing() {
+        // 비-UUID externalUserId는 warnIfNotUuid의 warn 분기를 타지만, 비파괴적이므로 처리는 계속된다.
+        var event = new ReviewCompleted(
+                "card-1",
+                "not-a-uuid",
+                "tenant-learning",
+                Rating.GOOD,
+                "2026-06-03T00:00:00Z",
+                "2026-06-02T00:00:00Z"
+        );
+
+        assertThatCode(() -> handler.handleReviewCompleted(event)).doesNotThrowAnyException();
+        // warn은 로깅만 — addXp는 정상적으로 호출되어야 한다(externalUserId는 원본 그대로 전달).
+        verify(gamificationService).addXp(
+                eq(com.synapse.engagement.shared.CurrentUser.resolveUserId("not-a-uuid")),
+                eq("not-a-uuid"),
+                eq("tenant-learning"),
+                any()
+        );
     }
 
     @Test
@@ -98,7 +178,7 @@ class EngagementKafkaEventHandlerTests {
                 "2026-06-03T00:00:00Z",
                 "2026-06-02T00:00:00Z"
         );
-        when(gamificationService.addXp(eq(800L), eq("tenant-learning"), any()))
+        when(gamificationService.addXp(eq(800L), eq("800"), eq("tenant-learning"), any()))
                 .thenThrow(new ConflictException("XP event already processed"));
 
         assertThatCode(() -> handler.handleReviewCompleted(event)).doesNotThrowAnyException();
