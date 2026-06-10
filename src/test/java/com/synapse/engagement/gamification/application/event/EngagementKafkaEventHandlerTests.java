@@ -79,13 +79,39 @@ class EngagementKafkaEventHandlerTests {
         handler.handleReviewCompleted(event);
 
         var requestCaptor = ArgumentCaptor.forClass(AddXpRequest.class);
-        verify(gamificationService).addXp(eq(800L), eq("tenant-learning"), requestCaptor.capture());
+        // 원본 UUID(여기선 "800")를 externalUserId로 그대로 전달한다(F10), 내부 PK는 Long(800L).
+        verify(gamificationService).addXp(eq(800L), eq("800"), eq("tenant-learning"), requestCaptor.capture());
         var request = requestCaptor.getValue();
         assertThat(request.eventType()).isEqualTo(EventType.CARD_REVIEWED);
         assertThat(request.xpAmount()).isNull();
         assertThat(request.sourceType()).isEqualTo("card-review");
         assertThat(request.sourceId()).isEqualTo("review-completed:card-1:2026-06-02T00:00:00Z");
         assertThat(request.eventId()).isEqualTo("review-completed:card-1:2026-06-02T00:00:00Z");
+    }
+
+    @Test
+    void reviewCompletedPropagatesPlatformUuidAsExternalUserIdWhileHashingInternalPk() {
+        // 소스 userId가 platform UUID일 때: 내부 PK는 결정적 해시(Long)지만, externalUserId는
+        // 원본 UUID를 그대로 addXp에 전달해야 outbound 이벤트가 UUID userId를 싣는다(F10).
+        var uuid = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+        var event = new ReviewCompleted(
+                "card-9",
+                uuid,
+                "11112222-3333-4444-5555-666677778888",
+                Rating.GOOD,
+                "2026-06-10T00:00:00Z",
+                "2026-06-09T00:00:00Z"
+        );
+        var expectedLong = com.synapse.engagement.shared.CurrentUser.resolveUserId(uuid);
+
+        handler.handleReviewCompleted(event);
+
+        verify(gamificationService).addXp(
+                eq(expectedLong),
+                eq(uuid),
+                eq("11112222-3333-4444-5555-666677778888"),
+                any()
+        );
     }
 
     @Test
@@ -98,7 +124,7 @@ class EngagementKafkaEventHandlerTests {
                 "2026-06-03T00:00:00Z",
                 "2026-06-02T00:00:00Z"
         );
-        when(gamificationService.addXp(eq(800L), eq("tenant-learning"), any()))
+        when(gamificationService.addXp(eq(800L), eq("800"), eq("tenant-learning"), any()))
                 .thenThrow(new ConflictException("XP event already processed"));
 
         assertThatCode(() -> handler.handleReviewCompleted(event)).doesNotThrowAnyException();

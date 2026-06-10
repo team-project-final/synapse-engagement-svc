@@ -44,11 +44,22 @@ public class GamificationService {
 
     @Transactional
     public UserGamificationResponse addXp(Long userId, AddXpRequest request) {
-        return addXp(userId, "default", request);
+        return addXp(userId, String.valueOf(userId), "default", request);
     }
 
     @Transactional
     public UserGamificationResponse addXp(Long userId, String tenantId, AddXpRequest request) {
+        // externalUserId를 모르는 내부 호출용 편의 오버로드 — 내부 Long을 그대로 외부 식별자로 본다.
+        return addXp(userId, String.valueOf(userId), tenantId, request);
+    }
+
+    /**
+     * @param userId         내부 PK(Long). XP/프로필/멱등성 등 모든 내부 처리에 사용.
+     * @param externalUserId platform UUID 문자열(원본 이벤트 userId 또는 JWT subject).
+     *                       outbound 이벤트(LevelUp/BadgeEarned/NotificationSend)에 그대로 실린다(F10).
+     */
+    @Transactional
+    public UserGamificationResponse addXp(Long userId, String externalUserId, String tenantId, AddXpRequest request) {
         // XP는 외부 이벤트 재전달이나 같은 source 중복 요청이 들어와도 한 번만 적립되어야 한다.
         // eventId는 Kafka/외부 이벤트 멱등성 키, userId+eventType+sourceId는 도메인 중복 방어선이다.
         if (xpEventRepository.existsByEventId(request.eventId())
@@ -76,9 +87,9 @@ public class GamificationService {
         var earnedBadges = badgeService.awardEligibleBadges(userId, profile, streak);
         // DB 상태 변경 후 도메인 결과가 확정된 경우에만 downstream 알림용 이벤트를 발행한다.
         if (newLevel > oldLevel) {
-            eventPublisher.publishLevelUp(userId, tenantId, oldLevel, newLevel, profile.getTotalXp());
+            eventPublisher.publishLevelUp(userId, externalUserId, tenantId, oldLevel, newLevel, profile.getTotalXp());
         }
-        earnedBadges.forEach(badge -> eventPublisher.publishBadgeEarned(userId, tenantId, badge));
+        earnedBadges.forEach(badge -> eventPublisher.publishBadgeEarned(userId, externalUserId, tenantId, badge));
         return UserGamificationResponse.from(profile, streak, earnedBadges);
     }
 

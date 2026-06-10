@@ -38,12 +38,13 @@ public class GamificationKafkaProducer implements GamificationEventPublisher {
     }
 
     @Override
-    public void publishLevelUp(Long userId, String tenantId, int oldLevel, int newLevel, int totalXp) {
+    public void publishLevelUp(Long userId, String externalUserId, String tenantId, int oldLevel, int newLevel, int totalXp) {
         // 필드명과 타입은 synapse-shared/src/main/avro/engagement/LevelUp.avsc와 반드시 맞춘다.
+        // userId는 platform UUID(externalUserId)를 그대로 싣는다 — platform이 UUID.fromString(userId) 한다(F10).
         var event = LevelUp.newBuilder()
                 .setEventId(UUID.randomUUID().toString())
                 .setTenantId(tenantId)
-                .setUserId(String.valueOf(userId))
+                .setUserId(externalUserId)
                 .setPreviousLevel(oldLevel)
                 .setNewLevel(newLevel)
                 .setTotalXp((long) totalXp)
@@ -51,18 +52,19 @@ public class GamificationKafkaProducer implements GamificationEventPublisher {
                 .build();
         send(levelUpTopic, tenantId, event);
         // 레벨업은 사용자 알림 대상 — platform 알림 버스(notification-send)로도 발행한다(W1 알림 leg, F10).
-        send(notificationSendTopic, tenantId, levelUpNotification(userId, tenantId, newLevel, totalXp));
+        send(notificationSendTopic, tenantId, levelUpNotification(externalUserId, tenantId, newLevel, totalXp));
     }
 
-    private NotificationSend levelUpNotification(Long userId, String tenantId, int newLevel, int totalXp) {
-        // eventId는 (userId, newLevel) 기반 결정적 UUID — 재전달돼도 platform 알림 dedupe(eventId)가 작동.
+    private NotificationSend levelUpNotification(String externalUserId, String tenantId, int newLevel, int totalXp) {
+        // eventId는 (externalUserId, newLevel) 기반 결정적 UUID — 재전달돼도 platform 알림 dedupe(eventId)가 작동.
         var eventId = UUID.nameUUIDFromBytes(
-                ("level-up:" + userId + ":" + newLevel).getBytes(StandardCharsets.UTF_8)).toString();
+                ("level-up:" + externalUserId + ":" + newLevel).getBytes(StandardCharsets.UTF_8)).toString();
         return NotificationSend.newBuilder()
                 .setEventId(eventId)
                 .setTenantId(tenantId)
                 .setOccurredAt(clock.millis())
-                .setUserId(String.valueOf(userId))
+                // platform NotificationService가 UUID.fromString(userId) 하므로 UUID를 그대로 싣는다(F10).
+                .setUserId(externalUserId)
                 .setNotificationType("LEVEL_UP")
                 .setChannels(List.of("FCM"))
                 .setTitle("레벨 업!")
@@ -71,12 +73,13 @@ public class GamificationKafkaProducer implements GamificationEventPublisher {
     }
 
     @Override
-    public void publishBadgeEarned(Long userId, String tenantId, BadgeResponse badge) {
+    public void publishBadgeEarned(Long userId, String externalUserId, String tenantId, BadgeResponse badge) {
         // 별도 badge UUID가 생기기 전까지 badgeId는 안정적인 로컬 badge code로 매핑한다.
+        // userId는 platform UUID(externalUserId)를 그대로 싣는다(F10).
         var event = BadgeEarned.newBuilder()
                 .setEventId(UUID.randomUUID().toString())
                 .setTenantId(tenantId)
-                .setUserId(String.valueOf(userId))
+                .setUserId(externalUserId)
                 .setBadgeId(badge.code())
                 .setBadgeCode(badge.code())
                 .setBadgeName(badge.name())

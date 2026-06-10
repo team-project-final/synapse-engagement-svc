@@ -70,7 +70,10 @@ class GamificationKafkaProducerTests {
                     "platform.notification.notification-send-v1"
             );
 
-            publisher.publishLevelUp(80L, "tenant-a", 1, 2, 120);
+            // outbound 이벤트는 platform UUID userId를 그대로 실어야 한다(F10): 내부 Long(80L)이 아니라 externalUserId.
+            var externalUserId = "11111111-1111-1111-1111-111111111111";
+            var tenantId = "22222222-2222-2222-2222-222222222222";
+            publisher.publishLevelUp(80L, externalUserId, tenantId, 1, 2, 120);
             var badge = new BadgeResponse(
                     "LEVEL_2",
                     "Level 2",
@@ -80,7 +83,7 @@ class GamificationKafkaProducerTests {
                     2,
                     Instant.now()
             );
-            publisher.publishBadgeEarned(80L, "tenant-a", badge);
+            publisher.publishBadgeEarned(80L, externalUserId, tenantId, badge);
 
             var levelUp = KafkaTestUtils.getSingleRecord(
                     consumer,
@@ -91,23 +94,23 @@ class GamificationKafkaProducerTests {
                     "engagement.gamification.badge-earned-v1"
             );
 
-            assertThat(levelUp.key()).isEqualTo("tenant-a");
+            assertThat(levelUp.key()).isEqualTo(tenantId);
             assertThat(levelUp.value()).isInstanceOf(LevelUp.class);
             var levelUpEvent = (LevelUp) levelUp.value();
             assertThat(levelUpEvent.getEventId()).isNotBlank();
-            assertThat(levelUpEvent.getTenantId()).isEqualTo("tenant-a");
-            assertThat(levelUpEvent.getUserId()).isEqualTo("80");
+            assertThat(levelUpEvent.getTenantId()).isEqualTo(tenantId);
+            assertThat(levelUpEvent.getUserId()).isEqualTo(externalUserId);
             assertThat(levelUpEvent.getPreviousLevel()).isEqualTo(1);
             assertThat(levelUpEvent.getNewLevel()).isEqualTo(2);
             assertThat(levelUpEvent.getTotalXp()).isEqualTo(120L);
             assertThat(levelUpEvent.getOccurredAt()).isPositive();
 
-            assertThat(badgeEarned.key()).isEqualTo("tenant-a");
+            assertThat(badgeEarned.key()).isEqualTo(tenantId);
             assertThat(badgeEarned.value()).isInstanceOf(BadgeEarned.class);
             var badgeEarnedEvent = (BadgeEarned) badgeEarned.value();
             assertThat(badgeEarnedEvent.getEventId()).isNotBlank();
-            assertThat(badgeEarnedEvent.getTenantId()).isEqualTo("tenant-a");
-            assertThat(badgeEarnedEvent.getUserId()).isEqualTo("80");
+            assertThat(badgeEarnedEvent.getTenantId()).isEqualTo(tenantId);
+            assertThat(badgeEarnedEvent.getUserId()).isEqualTo(externalUserId);
             assertThat(badgeEarnedEvent.getBadgeId()).isEqualTo("LEVEL_2");
             assertThat(badgeEarnedEvent.getBadgeCode()).isEqualTo("LEVEL_2");
             assertThat(badgeEarnedEvent.getBadgeName()).isEqualTo("Level 2");
@@ -118,12 +121,13 @@ class GamificationKafkaProducerTests {
                     consumer,
                     "platform.notification.notification-send-v1"
             );
-            assertThat(notification.key()).isEqualTo("tenant-a");
+            assertThat(notification.key()).isEqualTo(tenantId);
             assertThat(notification.value()).isInstanceOf(NotificationSend.class);
             var notificationEvent = (NotificationSend) notification.value();
             assertThat(notificationEvent.getEventId()).isNotBlank();
-            assertThat(notificationEvent.getTenantId()).isEqualTo("tenant-a");
-            assertThat(notificationEvent.getUserId()).isEqualTo("80");
+            assertThat(notificationEvent.getTenantId()).isEqualTo(tenantId);
+            // platform NotificationService가 UUID.fromString(userId) 하므로 UUID여야 한다(F10 핵심).
+            assertThat(notificationEvent.getUserId()).isEqualTo(externalUserId);
             assertThat(notificationEvent.getNotificationType().toString()).isEqualTo("LEVEL_UP");
             assertThat(notificationEvent.getOccurredAt()).isPositive();
         }

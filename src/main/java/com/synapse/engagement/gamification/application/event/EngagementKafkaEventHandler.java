@@ -41,8 +41,12 @@ public class EngagementKafkaEventHandler {
     }
 
     public void handleReviewCompleted(ReviewCompleted event) {
+        // 원본 ReviewCompleted.userId는 이미 platform UUID다. 내부 PK는 해시 Long(userId)을 쓰되,
+        // outbound 이벤트에는 원본 UUID(externalUserId)를 그대로 실어 platform UUID.fromString 실패(F10)를 막는다.
+        var externalUserId = event.getUserId() == null ? null : event.getUserId().toString();
         var userId = resolveUserId(event.getUserId());
-        var tenantId = event.getTenantId().toString();
+        var tenantId = event.getTenantId() == null ? null : event.getTenantId().toString();
+        warnIfNotUuid("tenantId", tenantId);
         var eventId = reviewCompletedIdempotencyKey(event);
         var request = new AddXpRequest(
                 EventType.CARD_REVIEWED,
@@ -52,10 +56,23 @@ public class EngagementKafkaEventHandler {
                 eventId
         );
         try {
-            gamificationService.addXp(userId, tenantId, request);
-            log.info("Applied XP from ReviewCompleted. userId={}, tenantId={}, cardId={}", userId, tenantId, event.getCardId());
+            gamificationService.addXp(userId, externalUserId, tenantId, request);
+            log.info("Applied XP from ReviewCompleted. userId={}, externalUserId={}, tenantId={}, cardId={}",
+                    userId, externalUserId, tenantId, event.getCardId());
         } catch (ConflictException ex) {
             log.info("ReviewCompleted already processed. userId={}, eventId={}", userId, eventId);
+        }
+    }
+
+    private void warnIfNotUuid(String field, String value) {
+        // platform 측 소비자가 UUID.fromString(tenantId/userId) 하므로, 비-UUID가 흘러오면 방어 로깅한다(F10).
+        if (value == null) {
+            return;
+        }
+        try {
+            java.util.UUID.fromString(value);
+        } catch (IllegalArgumentException ex) {
+            log.warn("Outbound {} is not a UUID — platform UUID.fromString may fail. {}={}", field, field, value);
         }
     }
 

@@ -30,9 +30,11 @@ class GamificationKafkaAclSimulationTests {
                 "platform.notification.notification-send-v1"
         );
 
-        producer.publishLevelUp(70L, "tenant-acl", 1, 2, 120);
+        var externalUserId = "33333333-3333-3333-3333-333333333333";
+        producer.publishLevelUp(70L, externalUserId, "tenant-acl", 1, 2, 120);
         producer.publishBadgeEarned(
                 70L,
+                externalUserId,
                 "tenant-acl",
                 new BadgeResponse(
                         "LEVEL_2",
@@ -69,5 +71,9 @@ class GamificationKafkaAclSimulationTests {
         assertThat(levelUpCaptor.getValue()).isInstanceOf(LevelUp.class);
         assertThat(badgeEarnedCaptor.getValue()).isInstanceOf(BadgeEarned.class);
         assertThat(notificationCaptor.getValue()).isInstanceOf(NotificationSend.class);
+        // outbound userId는 내부 Long(70)이 아니라 platform UUID를 그대로 실어야 한다(F10).
+        assertThat(((LevelUp) levelUpCaptor.getValue()).getUserId()).isEqualTo(externalUserId);
+        assertThat(((BadgeEarned) badgeEarnedCaptor.getValue()).getUserId()).isEqualTo(externalUserId);
+        assertThat(((NotificationSend) notificationCaptor.getValue()).getUserId()).isEqualTo(externalUserId);
     }
 }

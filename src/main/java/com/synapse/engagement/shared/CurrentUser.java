@@ -24,6 +24,18 @@ public final class CurrentUser {
     }
 
     /**
+     * JWT subject(platform UUID 문자열)를 그대로 반환한다.
+     * 내부 PK(require)는 해시 Long을 쓰지만, outbound 이벤트에는 이 원본 subject(UUID)를 실어야
+     * platform NotificationService의 UUID.fromString(userId)가 성공한다(F10).
+     */
+    public static String subject(Jwt jwt) {
+        if (jwt == null || jwt.getSubject() == null || jwt.getSubject().isBlank()) {
+            throw new UnauthorizedException("JWT subject is required");
+        }
+        return jwt.getSubject();
+    }
+
+    /**
      * 외부 userId(JWT subject 또는 이벤트 필드)를 내부 Long userId로 변환한다.
      * 숫자면 그대로, 아니면(UUID 등) nameUUIDFromBytes 기반 결정적 해시.
      * HTTP·Kafka 양 경로가 이 메서드를 공유해 신원 도출이 분기되지 않도록 한다.

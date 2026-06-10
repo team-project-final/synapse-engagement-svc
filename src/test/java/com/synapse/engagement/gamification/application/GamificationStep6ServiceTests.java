@@ -140,7 +140,7 @@ class GamificationStep6ServiceTests {
                 .hasMessageContaining("already processed");
         verify(profileRepository, never()).save(any());
         verify(streakService, never()).recordActivity(any());
-        verify(eventPublisher, never()).publishLevelUp(any(), any(), anyInt(), anyInt(), anyInt());
+        verify(eventPublisher, never()).publishLevelUp(any(), any(), any(), anyInt(), anyInt(), anyInt());
     }
 
     @Test
@@ -185,6 +185,7 @@ class GamificationStep6ServiceTests {
         assertThat(response.currentStreak()).isEqualTo(1);
         verify(xpEventRepository).save(any());
         verify(badgeService).awardEligibleBadges(eq(60L), any(UserProfilesGamification.class), eq(streak));
-        verify(eventPublisher).publishLevelUp(60L, "default", 1, 2, 150);
+        // 2-arg addXp(60L, request)는 externalUserId를 내부 Long에서 도출("60") → outbound도 "60".
+        verify(eventPublisher).publishLevelUp(60L, "60", "default", 1, 2, 150);
     }
 }
