@@ -136,7 +136,8 @@
 - [x] kafka-console-consumer로 이벤트 수신 확인
 - [x] mock notification processor 계약 테스트 (Avro consume → notification command 변환)
   - 주석: 실제 platform notification 프로세스 연동은 아니며, mock consumer가 level-up/badge-earned Avro 이벤트를 읽어 notification command로 변환할 수 있음을 검증 완료.
-- [ ] notification 서비스 연동 테스트 (이벤트 → 알림 발송)
+- [x] notification 연동 slice/contract 테스트 (이벤트 → fake notification command 변환)
+  - 주석: 실제 notification-svc 라이브 연동은 W5 통합/배포 검증 항목으로 분리하고, Step 7에서는 Avro consume 및 notification command 변환 계약을 완료 기준으로 처리.
 
 ### 7.10 결과 정리
 - [x] 이벤트 스키마 문서화

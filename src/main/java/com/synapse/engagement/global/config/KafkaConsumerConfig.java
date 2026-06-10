@@ -4,6 +4,7 @@ import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig;
 import io.confluent.kafka.serializers.KafkaAvroDeserializer;
 import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig;
 import org.apache.avro.specific.SpecificRecord;
+import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -36,11 +37,15 @@ public class KafkaConsumerConfig {
     ConsumerFactory<String, SpecificRecord> specificRecordConsumerFactory(
             @Value("${spring.kafka.bootstrap-servers:localhost:9092}") String bootstrapServers,
             @Value("${spring.kafka.consumer.group-id:engagement-svc-group}") String groupId,
+            @Value("${spring.kafka.security.protocol:PLAINTEXT}") String securityProtocol,
             @Value("${spring.kafka.producer.properties.schema.registry.url:http://localhost:8086}") String schemaRegistryUrl
     ) {
         Map<String, Object> config = new HashMap<>();
         config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         config.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
+        // Producer와 같은 security.protocol을 써야 TLS-only MSK에서 consume도 정상 동작한다.
+        // 이 값이 빠지면 env가 주입돼도 Kafka client는 PLAINTEXT로 접속을 시도할 수 있다.
+        config.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, securityProtocol);
         config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
         config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
