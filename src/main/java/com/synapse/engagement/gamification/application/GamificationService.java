@@ -47,12 +47,6 @@ public class GamificationService {
         return addXp(userId, String.valueOf(userId), "default", request);
     }
 
-    @Transactional
-    public UserGamificationResponse addXp(Long userId, String tenantId, AddXpRequest request) {
-        // externalUserId를 모르는 내부 호출용 편의 오버로드 — 내부 Long을 그대로 외부 식별자로 본다.
-        return addXp(userId, String.valueOf(userId), tenantId, request);
-    }
-
     /**
      * @param userId         내부 PK(Long). XP/프로필/멱등성 등 모든 내부 처리에 사용.
      * @param externalUserId platform UUID 문자열(원본 이벤트 userId 또는 JWT subject).

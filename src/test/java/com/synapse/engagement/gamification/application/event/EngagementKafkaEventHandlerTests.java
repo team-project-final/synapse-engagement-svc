@@ -115,6 +115,60 @@ class EngagementKafkaEventHandlerTests {
     }
 
     @Test
+    void reviewCompletedWithNullUserIdIsWarnSkippedWithoutPublishingOrThrowing() {
+        // 필수 신원(userId)이 없으면 outbound Avro의 non-null 필드를 채울 수 없다 — warn 후 스킵해야 한다.
+        var event = new ReviewCompleted(
+                "card-1",
+                null,
+                "tenant-learning",
+                Rating.GOOD,
+                "2026-06-03T00:00:00Z",
+                "2026-06-02T00:00:00Z"
+        );
+
+        assertThatCode(() -> handler.handleReviewCompleted(event)).doesNotThrowAnyException();
+        verify(gamificationService, never()).addXp(any(), any(), any(), any());
+    }
+
+    @Test
+    void reviewCompletedWithNullTenantIdIsWarnSkippedWithoutPublishingOrThrowing() {
+        // tenantId 역시 outbound Avro의 non-null 필수 필드 — null이면 warn 후 스킵한다.
+        var event = new ReviewCompleted(
+                "card-1",
+                "800",
+                null,
+                Rating.GOOD,
+                "2026-06-03T00:00:00Z",
+                "2026-06-02T00:00:00Z"
+        );
+
+        assertThatCode(() -> handler.handleReviewCompleted(event)).doesNotThrowAnyException();
+        verify(gamificationService, never()).addXp(any(), any(), any(), any());
+    }
+
+    @Test
+    void reviewCompletedWithNonUuidExternalUserIdStillProcessesWithoutThrowing() {
+        // 비-UUID externalUserId는 warnIfNotUuid의 warn 분기를 타지만, 비파괴적이므로 처리는 계속된다.
+        var event = new ReviewCompleted(
+                "card-1",
+                "not-a-uuid",
+                "tenant-learning",
+                Rating.GOOD,
+                "2026-06-03T00:00:00Z",
+                "2026-06-02T00:00:00Z"
+        );
+
+        assertThatCode(() -> handler.handleReviewCompleted(event)).doesNotThrowAnyException();
+        // warn은 로깅만 — addXp는 정상적으로 호출되어야 한다(externalUserId는 원본 그대로 전달).
+        verify(gamificationService).addXp(
+                eq(com.synapse.engagement.shared.CurrentUser.resolveUserId("not-a-uuid")),
+                eq("not-a-uuid"),
+                eq("tenant-learning"),
+                any()
+        );
+    }
+
+    @Test
     void reviewCompletedSkipsDuplicateXpEventWithoutCrashingConsumer() {
         var event = new ReviewCompleted(
                 "card-1",

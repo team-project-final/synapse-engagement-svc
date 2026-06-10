@@ -18,6 +18,10 @@ import java.util.UUID;
 @Component
 @ConditionalOnProperty(prefix = "synapse.kafka", name = "enabled", havingValue = "true")
 public class GamificationKafkaProducer implements GamificationEventPublisher {
+    private static final String LEVEL_UP_NOTIFICATION_ID_PREFIX = "level-up:";
+    private static final String LEVEL_UP_NOTIFICATION_TYPE = "LEVEL_UP";
+    private static final String FCM_CHANNEL = "FCM";
+
     private final KafkaTemplate<String, SpecificRecord> kafkaTemplate;
     private final String levelUpTopic;
     private final String badgeEarnedTopic;
@@ -58,15 +62,15 @@ public class GamificationKafkaProducer implements GamificationEventPublisher {
     private NotificationSend levelUpNotification(String externalUserId, String tenantId, int newLevel, int totalXp) {
         // eventId는 (externalUserId, newLevel) 기반 결정적 UUID — 재전달돼도 platform 알림 dedupe(eventId)가 작동.
         var eventId = UUID.nameUUIDFromBytes(
-                ("level-up:" + externalUserId + ":" + newLevel).getBytes(StandardCharsets.UTF_8)).toString();
+                (LEVEL_UP_NOTIFICATION_ID_PREFIX + externalUserId + ":" + newLevel).getBytes(StandardCharsets.UTF_8)).toString();
         return NotificationSend.newBuilder()
                 .setEventId(eventId)
                 .setTenantId(tenantId)
                 .setOccurredAt(clock.millis())
                 // platform NotificationService가 UUID.fromString(userId) 하므로 UUID를 그대로 싣는다(F10).
                 .setUserId(externalUserId)
-                .setNotificationType("LEVEL_UP")
-                .setChannels(List.of("FCM"))
+                .setNotificationType(LEVEL_UP_NOTIFICATION_TYPE)
+                .setChannels(List.of(FCM_CHANNEL))
                 .setTitle("레벨 업!")
                 .setBody("레벨 " + newLevel + " 달성 (XP " + totalXp + ")")
                 .build();
