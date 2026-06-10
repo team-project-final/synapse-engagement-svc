@@ -102,7 +102,8 @@ class GamificationControllerWebMvcTest {
 
     @Test
     void addXpUsesAuthenticatedSubjectAndReturnsUpdatedProfile() throws Exception {
-        when(gamificationService.addXp(eq(300L), eq("default"), any()))
+        // JWT subject("300")가 externalUserId로 전달되어야 한다(F10). 내부 PK는 Long(300L).
+        when(gamificationService.addXp(eq(300L), eq("300"), eq("default"), any()))
                 .thenReturn(new UserGamificationResponse(10, 1, 1, 1, List.of()));
 
         mvc.perform(post("/api/v1/gamification/xp/events")
