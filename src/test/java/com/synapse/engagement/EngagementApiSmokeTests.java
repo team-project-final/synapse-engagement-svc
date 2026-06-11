@@ -97,6 +97,17 @@ class EngagementApiSmokeTests {
     }
 
     @Test
+    void actuatorHealthProbesArePermittedWithoutAuth() throws Exception {
+        // #43: 쿠버네티스 프로브가 호출하는 health 하위 경로가 401이면 livenessProbe 실패 →
+        // SIGTERM 재시작 루프가 발생한다. 무인증 200을 보장한다.
+        mvc.perform(get("/actuator/health/liveness"))
+                .andExpect(status().isOk());
+
+        mvc.perform(get("/actuator/health/readiness"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void swaggerApiDocsExposeGamificationEndpoints() throws Exception {
         mvc.perform(get("/v3/api-docs"))
                 .andExpect(status().isOk())

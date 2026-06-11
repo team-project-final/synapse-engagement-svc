@@ -38,7 +38,9 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 // 운영/문서 확인용 엔드포인트는 인증 없이 열어둔다.
-                .requestMatchers("/actuator/health", "/actuator/info").permitAll()
+                // 쿠버네티스 프로브는 하위 경로(/actuator/health/liveness·/readiness)를 호출하므로
+                // 와일드카드로 열어 401 → livenessProbe 실패 → SIGTERM 재시작 루프를 막는다. (#43)
+                .requestMatchers("/actuator/health/**", "/actuator/info").permitAll()
                 .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
 
                 // 공유 토큰 조회와 커뮤니티 검색은 공개 기능이므로 GET만 인증 없이 허용한다.
