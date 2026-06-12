@@ -1,11 +1,11 @@
 package com.synapse.engagement.gamification.application.event;
 
 import com.synapse.engagement.gamification.api.dto.BadgeResponse;
+import com.synapse.engagement.shared.KafkaTopicResolver;
 import com.synapse.engagement.BadgeEarned;
 import com.synapse.engagement.LevelUp;
 import com.synapse.platform.NotificationSend;
 import org.apache.avro.specific.SpecificRecord;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
@@ -30,14 +30,12 @@ public class GamificationKafkaProducer implements GamificationEventPublisher {
 
     public GamificationKafkaProducer(
             KafkaTemplate<String, SpecificRecord> kafkaTemplate,
-            @Value("${synapse.kafka.topics.level-up}") String levelUpTopic,
-            @Value("${synapse.kafka.topics.badge-earned}") String badgeEarnedTopic,
-            @Value("${synapse.kafka.topics.notification-send}") String notificationSendTopic
+            KafkaTopicResolver kafkaTopicResolver
     ) {
         this.kafkaTemplate = kafkaTemplate;
-        this.levelUpTopic = levelUpTopic;
-        this.badgeEarnedTopic = badgeEarnedTopic;
-        this.notificationSendTopic = notificationSendTopic;
+        this.levelUpTopic = kafkaTopicResolver.levelUp();
+        this.badgeEarnedTopic = kafkaTopicResolver.badgeEarned();
+        this.notificationSendTopic = kafkaTopicResolver.notificationSend();
         this.clock = Clock.systemUTC();
     }
 
