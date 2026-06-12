@@ -5,6 +5,7 @@ import com.synapse.engagement.LevelUp;
 import com.synapse.platform.NotificationSend;
 import com.synapse.engagement.gamification.api.dto.BadgeResponse;
 import com.synapse.engagement.gamification.domain.BadgeConditionType;
+import com.synapse.engagement.shared.KafkaTopicResolver;
 import org.apache.avro.specific.SpecificRecord;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -25,9 +26,14 @@ class GamificationKafkaAclSimulationTests {
         KafkaTemplate<String, SpecificRecord> kafkaTemplate = mock(KafkaTemplate.class);
         var producer = new GamificationKafkaProducer(
                 kafkaTemplate,
-                "engagement.gamification.level-up-v1",
-                "engagement.gamification.badge-earned-v1",
-                "platform.notification.notification-send-v1"
+                new KafkaTopicResolver(
+                        "",
+                        "engagement.gamification.level-up-v1",
+                        "engagement.gamification.badge-earned-v1",
+                        "platform.auth.user-registered-v1",
+                        "learning.card.review-completed-v1",
+                        "platform.notification.notification-send-v1"
+                )
         );
 
         var externalUserId = "33333333-3333-3333-3333-333333333333";
