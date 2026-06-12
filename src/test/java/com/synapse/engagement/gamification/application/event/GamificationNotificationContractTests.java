@@ -67,9 +67,11 @@ class GamificationNotificationContractTests {
                     "engagement.gamification.badge-earned-v1"
             );
 
-            publisher.publishLevelUp(90L, "tenant-notify", 2, 3, 360);
+            var externalUserId = "44444444-4444-4444-4444-444444444444";
+            publisher.publishLevelUp(90L, externalUserId, "tenant-notify", 2, 3, 360);
             publisher.publishBadgeEarned(
                     90L,
+                    externalUserId,
                     "tenant-notify",
                     new BadgeResponse(
                             "STREAK_3",
@@ -102,14 +104,14 @@ class GamificationNotificationContractTests {
 
             assertThat(levelUpNotification).isEqualTo(new NotificationCommand(
                     "tenant-notify",
-                    "90",
+                    externalUserId,
                     "LEVEL_UP",
                     "Level 3 reached",
                     "totalXp=360"
             ));
             assertThat(badgeNotification).isEqualTo(new NotificationCommand(
                     "tenant-notify",
-                    "90",
+                    externalUserId,
                     "BADGE_EARNED",
                     "Badge earned: 3 Day Streak",
                     "badgeCode=STREAK_3"

@@ -71,7 +71,12 @@ public class GamificationController {
             @AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody AddXpRequest request
     ) {
+        // 내부 PK는 require(해시 Long), outbound 이벤트엔 JWT subject(UUID)를 externalUserId로 실어 전파한다(F10).
         // tenantId는 Kafka 이벤트 파티션 키와 Avro 메타 필드에 쓰이므로 XP 적립 흐름까지 함께 전달한다.
-        return gamificationService.addXp(CurrentUser.require(jwt), CurrentTenant.resolve(jwt), request);
+        return gamificationService.addXp(
+                CurrentUser.require(jwt),
+                CurrentUser.subject(jwt),
+                CurrentTenant.resolve(jwt),
+                request);
     }
 }
