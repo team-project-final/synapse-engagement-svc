@@ -1,5 +1,6 @@
 plugins {
 	java
+	jacoco
 	id("org.springframework.boot") version "4.0.0"
 	id("io.spring.dependency-management") version "1.1.7"
 	// 벤더링한 synapse-shared Avro 계약에서 SpecificRecord 클래스를 생성한다.
@@ -30,6 +31,7 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-security")
 	implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
 	implementation("org.springframework.kafka:spring-kafka")
+	runtimeOnly("io.micrometer:micrometer-registry-prometheus")
 	implementation("org.springframework.data:spring-data-commons")
 	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3")
 	implementation("org.mapstruct:mapstruct:1.6.3")
@@ -56,6 +58,54 @@ dependencies {
 
 tasks.withType<Test> {
 	useJUnitPlatform()
+	finalizedBy(tasks.jacocoTestReport)
+}
+
+jacoco {
+	toolVersion = "0.8.13"
+}
+
+val coverageExclusions = listOf(
+	"**/EngagementSvcApplication.class",
+	"com/synapse/engagement/BadgeEarned*.class",
+	"com/synapse/engagement/LevelUp*.class",
+	"com/synapse/learning/*.class",
+	"com/synapse/platform/*.class"
+)
+
+tasks.jacocoTestReport {
+	dependsOn(tasks.test)
+	reports {
+		xml.required.set(true)
+		html.required.set(true)
+		csv.required.set(false)
+	}
+	classDirectories.setFrom(files(classDirectories.files.map {
+		fileTree(it) {
+			exclude(coverageExclusions)
+		}
+	}))
+}
+
+tasks.jacocoTestCoverageVerification {
+	dependsOn(tasks.test)
+	classDirectories.setFrom(files(classDirectories.files.map {
+		fileTree(it) {
+			exclude(coverageExclusions)
+		}
+	}))
+	violationRules {
+		rule {
+			limit {
+				counter = "LINE"
+				minimum = "0.80".toBigDecimal()
+			}
+		}
+	}
+}
+
+tasks.check {
+	dependsOn(tasks.jacocoTestCoverageVerification)
 }
 
 dependencyManagement {
