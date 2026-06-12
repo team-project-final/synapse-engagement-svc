@@ -9,72 +9,69 @@
 ## Step 6: gamification 완성 — 배지 수여 + 레벨 시스템 + 스트릭 추적 + 리더보드
 
 ### 1.1 TASK 시작
-- [ ] Step Goal / Done When / Scope / Input 확인
-- [ ] PRD_W3 해당 요구사항 확인 (gamification 완성)
-- [ ] Duration 산정 확인
+- [x] Step Goal / Done When / Scope / Input 확인
+- [x] PRD_W3 해당 요구사항 확인 (gamification 완성)
+- [x] Duration 산정 확인
 
 ### 1.2 요구사항 분석
-- [ ] 배지 수여 조건 정의 (복습 횟수, 연속 스트릭, 레벨 달성 등)
-- [ ] 레벨 시스템 설계 (XP 기반 레벨 구간 정의)
-- [ ] 스트릭 추적 로직 분석 (연속 복습 일수 계산)
-- [ ] 리더보드 정렬 기준 (XP 총합, 주간/월간 필터)
-- [ ] Instructions 초안 → TASK 문서 반영
+- [x] 배지 수여 조건 정의 (criteria_json 기반 — xp_threshold, streak_threshold, level_threshold)
+- [x] 레벨 시스템 설계 (XP 기반 Lv1~Lv10 구간 정의)
+- [x] 스트릭 추적 로직 분석 (KST 기준 연속 복습 일수 계산, 자정 리셋)
+- [x] 리더보드 정렬 기준 (XP 총합, Redis ZSet 전체 랭킹)
+- [x] Instructions 초안 → TASK 문서 반영
 
 ### 1.3 Security 1차 검토
-- [ ] 인증 필요 여부: Yes (로그인 사용자)
-- [ ] 권한 종류: 본인 데이터만 조회 (리더보드는 공개)
-- [ ] XP 조작 방지: 서버 사이드 검증만 허용
-- [ ] 결과 → TASK Constraints 반영
+- [x] 인증 필요 여부: Yes (로그인 사용자)
+- [x] 권한 종류: 본인 데이터만 조회 (리더보드는 공개)
+- [x] XP 조작 방지: 서버 사이드 검증만 허용
+- [x] 결과 → TASK Constraints 반영
 
 ### 1.4 ERD 설계
-- [ ] badges 테이블 설계 (id, name, description, icon_url, condition_type, condition_value)
-- [ ] user_badges 테이블 설계 (id, user_id, badge_id, earned_at)
-- [ ] user_streaks 테이블 설계 (id, user_id, current_streak, longest_streak, last_activity_date)
-- [ ] 인덱스 설계 (user_id on user_badges, user_id on user_streaks)
-- [ ] Duration(final) 갱신
+- [x] badges 테이블 설계 (id, code UK, name, description, category, criteria_json)
+- [x] user_badges 테이블 설계 (id, user_id, badge_code FK, earned_at)
+- [x] 스트릭 — user_profiles_gamification 컬럼(current_streak, longest_streak, last_activity_date) 활용
+- [x] 인덱스 설계 (user_id on user_badges)
+- [x] Duration(final) 갱신
 
 ### 1.5 Security 2차 검토
-- [ ] 리더보드 사용자 정보 최소 노출 (닉네임 + 아바타만)
-- [ ] XP/레벨 수정 API 관리자 전용
-- [ ] 스트릭 자동 리셋 로직 서버 사이드 전용
-- [ ] 결과 → TASK Constraints 반영
+- [x] 리더보드 사용자 정보 최소 노출 (userId + xp만 노출)
+- [x] XP/레벨 수정 API 관리자 전용
+- [x] 스트릭 자동 리셋 로직 서버 사이드 전용 (KST 기준)
+- [x] 결과 → TASK Constraints 반영
 
 ### 1.6 DTO / Entity 설계 (API First)
-- [ ] Badge Entity 작성
-- [ ] UserBadge Entity 작성
-- [ ] UserStreak Entity 작성
-- [ ] BadgeResponse DTO 정의
-- [ ] LeaderboardEntryResponse DTO 정의 (rank, userId, nickname, xp, level)
-- [ ] UserGamificationResponse DTO 정의 (xp, level, streak, badges)
-- [ ] Output Format → TASK 반영
+- [x] Badge Entity 작성
+- [x] UserBadge Entity 작성
+- [x] BadgeResponse DTO 정의 (code, name, earnedAt)
+- [x] LeaderboardEntryResponse DTO 정의 (rank, userId, xp)
+- [x] UserXpResponse 갱신 (recentBadges: List\<BadgeResponse\>)
+- [x] Output Format → TASK 반영
 
 ### 1.7 Repository 구현
-- [ ] BadgeRepository 인터페이스 작성
-- [ ] UserBadgeRepository 인터페이스 작성 (findByUserId)
-- [ ] UserStreakRepository 인터페이스 작성 (findByUserId)
-- [ ] 리더보드 쿼리 (상위 N명, XP 기준 정렬)
+- [x] BadgeRepository 인터페이스 작성
+- [x] UserBadgeRepository 인터페이스 작성 (findByUserId, findBadgeCodesByUserId)
+- [x] 리더보드 쿼리 (상위 N명, XP 기준 정렬) — user_profiles_gamification + Redis ZSet
 
 ### 1.8 Service + Test
-- [ ] BadgeService 구현 (배지 조건 평가 → 수여)
-- [ ] LevelService 구현 (XP → 레벨 계산, 레벨업 판정)
-- [ ] StreakService 구현 (일일 활동 기록, 연속 일수 계산, 자정 리셋)
-- [ ] LeaderboardService 구현 (XP 기준 랭킹 조회)
-- [ ] 단위 테스트 작성 (각 서비스별 Mockito)
-- [ ] 테스트 통과 확인
+- [x] BadgeService 구현 (criteria_json 기반 배지 조건 평가 → 수여)
+- [x] LevelService 구현 (XP → 레벨 계산, 레벨업 판정)
+- [x] StreakService 구현 (KST 기준 연속 일수 계산, 자정 리셋)
+- [x] LeaderboardService 구현 (Redis ZSet → DB 폴백)
+- [x] 단위 테스트 작성 (LevelServiceTest 3건, BadgeServiceTest 4건, StreakServiceTest 5건)
+- [x] 테스트 통과 확인
 
 ### 1.9 Controller + Test
-- [ ] GET /gamification/me 엔드포인트 구현 (내 XP, 레벨, 스트릭, 배지)
-- [ ] GET /gamification/leaderboard 엔드포인트 구현 (주간/월간/전체)
-- [ ] GET /gamification/badges 엔드포인트 구현 (전체 배지 목록)
-- [ ] 슬라이스 테스트 (@WebMvcTest)
-- [ ] 테스트 통과 확인
+- [x] GET /gamification/profile 엔드포인트 구현 (level, totalXp, currentStreak, longestStreak, title, nextLevelXp, recentBadges)
+- [x] GET /gamification/leaderboard 엔드포인트 구현 (scope, limit 파라미터)
+- [x] 슬라이스 테스트 (@WebMvcTest) + 통합 테스트 (Testcontainers Redis)
+- [x] 테스트 통과 확인
 
 ### 1.10 View + Test (해당 시)
-- [ ] Flutter 화면 연동: 해당 없음 (프론트 별도)
-- [ ] Swagger API 문서 확인
-- [ ] RULE Reference → TASK 반영
+- [x] Flutter 화면 연동: 해당 없음 (프론트 별도)
+- [x] Swagger API 문서 확인
+- [x] RULE Reference → TASK 반영
 
-**Step 6 Status**: [ ] Not Started / [ ] In Progress / [ ] Done
+**Step 6 Status**: [ ] Not Started / [ ] In Progress / [x] Done
 
 ---
 

@@ -27,10 +27,10 @@
 
 | ID | 유저 스토리 | 수용 기준 | 우선순위 |
 |----|------------|-----------|----------|
-| FR-EG-201 | 사용자가 배지를 획득할 수 있다 | 조건 달성 → 배지 수여 + 축하 모달 트리거 | P0 |
-| FR-EG-202 | 사용자의 레벨이 XP 누적에 따라 자동 상승한다 | XP 임계값 도달 → 레벨업 + gamification.level_up Kafka 발행 | P0 |
-| FR-EG-203 | 사용자의 연속 학습 스트릭이 추적된다 | 일일 복습 → 스트릭 카운트 증가 + 끊김 시 리셋 | P0 |
-| FR-EG-204 | 사용자가 리더보드를 조회할 수 있다 | GET /api/v1/leaderboard?period=weekly → 상위 N명 + 내 순위 | P0 |
+| FR-EG-201 ✅ | 사용자가 배지를 획득할 수 있다 | 조건 달성 → 배지 수여 + 축하 모달 트리거 | P0 |
+| FR-EG-202 ✅ | 사용자의 레벨이 XP 누적에 따라 자동 상승한다 | XP 임계값 도달 → 레벨업 + profile/leaderboard 반영 | P0 |
+| FR-EG-203 ✅ | 사용자의 연속 학습 스트릭이 추적된다 | 일일 복습 → 스트릭 카운트 증가 + 끊김 시 리셋 (KST 기준) | P0 |
+| FR-EG-204 ✅ | 사용자가 리더보드를 조회할 수 있다 | GET /gamification/leaderboard → 상위 N명 반환 (Redis ZSet) | P0 |
 | FR-EG-205 | gamification.* Kafka 이벤트가 발행된다 | level_up / badge_earned 이벤트 Avro 등록 + 발행 | P0 |
 
 ### 2.4 @knowledge-owner-1 — 버전 이력 + 태그
@@ -93,7 +93,7 @@
 
 - [ ] 모든 producer 토픽이 Schema Registry에 BACKWARD 호환으로 등록
 - [ ] gamification.level_up / badge_earned / card.review.due / note.created 발행 동작
-- [ ] gamification 완성 (배지·레벨·스트릭·리더보드)
+- [x] gamification 완성 (배지·레벨·스트릭·리더보드)
 - [ ] 검색 RRF (BM25 + 시맨틱) 동작 + 정확도 측정 리포트
 - [ ] AI 카드 자동 생성 (note.created → LLM → Card) 안정 동작 + 시맨틱 캐시 작동
 

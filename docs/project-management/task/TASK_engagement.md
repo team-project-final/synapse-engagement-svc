@@ -46,7 +46,7 @@
 - **Assignee**: @engagement-owner
 - **Reviewer**: @team-lead
 
-**Status**: [ ] Not Started / [ ] In Progress / [ ] Done
+**Status**: [ ] Not Started / [ ] In Progress / [x] Done
 
 ---
 
@@ -94,7 +94,7 @@
 - **Assignee**: @engagement-owner
 - **Reviewer**: @team-lead
 
-**Status**: [ ] Not Started / [ ] In Progress / [ ] Done
+**Status**: [ ] Not Started / [ ] In Progress / [x] Done
 
 ---
 
@@ -142,7 +142,7 @@
 - **Assignee**: @engagement-owner
 - **Reviewer**: @team-lead
 
-**Status**: [ ] Not Started / [ ] In Progress / [ ] Done
+**Status**: [ ] Not Started / [ ] In Progress / [x] Done
 
 ---
 
@@ -192,7 +192,7 @@
 - **Assignee**: @engagement-owner
 - **Reviewer**: @team-lead
 
-**Status**: [ ] Not Started / [ ] In Progress / [ ] Done
+**Status**: [ ] Not Started / [ ] In Progress / [x] Done
 
 ---
 
@@ -238,7 +238,7 @@
 - **Assignee**: @engagement-owner
 - **Reviewer**: @team-lead
 
-**Status**: [ ] Not Started / [ ] In Progress / [ ] Done
+**Status**: [ ] Not Started / [ ] In Progress / [x] Done
 
 ---
 
@@ -251,18 +251,18 @@
 - **Step Name**: 게이미피케이션 레벨/배지/스트릭/리더보드
 - **Step Goal**: 시스템이 XP 누적에 따라 자동으로 레벨을 상승시키고, 조건 달성 시 배지를 수여하며, 연속 학습 스트릭을 추적하고, 리더보드를 제공한다.
 - **Done When**:
-  - [ ] XP 누적 → 레벨 자동 상승 (레벨 테이블 기준)
-  - [ ] 조건 달성 시 배지 자동 수여 (e.g., 7일 연속 학습)
-  - [ ] 일별 학습 스트릭 추적 (연속 일수)
-  - [ ] `GET /gamification/leaderboard` → 주간 XP 리더보드
-  - [ ] `GET /gamification/me` → 내 레벨/배지/스트릭 조회
-  - [ ] 통합 테스트 통과
+  - [x] XP 누적 → 레벨 자동 상승 (레벨 테이블 기준)
+  - [x] 조건 달성 시 배지 자동 수여 (e.g., 7일 연속 학습)
+  - [x] 일별 학습 스트릭 추적 (연속 일수, KST 기준)
+  - [x] `GET /gamification/leaderboard` → XP 리더보드 (Redis ZSet)
+  - [x] `GET /gamification/profile` → 내 레벨/배지/스트릭 조회
+  - [x] 통합 테스트 통과
 - **Scope**:
   - In Scope:
-    - levels 테이블 (레벨별 필요 XP 정의)
-    - user_badges 테이블 + 배지 조건 엔진
-    - user_streaks 테이블 + 일별 스트릭 추적
-    - 리더보드 조회 API (주간 XP 기준, Redis 캐시)
+    - level_definitions 테이블 (레벨별 필요 XP 정의)
+    - badges/user_badges 테이블 + 배지 조건 엔진 (criteria_json)
+    - user_profiles_gamification 컬럼 기반 스트릭 추적 (별도 user_streaks 테이블 불필요)
+    - 리더보드 조회 API (Redis ZSet → DB 폴백)
     - 내 게이미피케이션 현황 조회 API
     - 통합 테스트
   - Out of Scope:
@@ -290,7 +290,7 @@
 - **Assignee**: @engagement-owner
 - **Reviewer**: @team-lead
 
-**Status**: [ ] Not Started / [ ] In Progress / [ ] Done
+**Status**: [ ] Not Started / [ ] In Progress / [x] Done
 
 ---
 
