@@ -1,477 +1,463 @@
-# TASK: @engagement-owner
+# TASK: engagement — synapse-engagement-svc
 
-> **담당 서비스**: engagement-svc (community / gamification)  
-> **GitHub Repository**: [synapse-engagement-svc](https://github.com/team-project-final/synapse-engagement-svc)  
-> **주차**: W1 (2026-05-12 ~ 2026-05-16)  
-> **관련 문서**: [SCOPE](../scope/SCOPE_engagement.md) | [PRD_W1](../prd/PRD_W1.md) | [WORKFLOW](../workflow/WORKFLOW_engagement_W1.md) | [HISTORY](../history/HISTORY_engagement.md)
+> **Repository**: [synapse-engagement-svc](https://github.com/team-project-final/synapse-engagement-svc)
+> **Track Owner**: 한승완
+> **Service Scope**: community / gamification
+> **Source of Truth**: [Workflow Dashboard](https://team-project-final.github.io/workflow-dashboard/#/detail/synapse-engagement-svc)
+> **Dashboard Updated At**: 2026-05-27T08:33:09.800Z
+> **관련 문서**: [SCOPE](../scope/SCOPE_engagement.md) | [HISTORY](../history/HISTORY_engagement.md)
 
 ---
 
-## Step 1: engagement-svc 골격 생성
+## 진행 요약
 
+| Week | Period | Progress | Status |
+|------|--------|----------|--------|
+| W1 | 05-12~05-16 | 116/116 | Done |
+| W2 | 05-19~05-23 | 106/106 | Done |
+| W3 | 05-26~05-29 | 125/126 | In Progress |
+| W4 | 06-01~06-05 | 43/43 | Done |
+| W5 | 06-08~06-12 | 16/16 | Done |
+
+---
+
+## TASK-EG-001
+
+- **Task ID**: TASK-EG-001
+- **Title**: engagement-svc 골격 생성
+- **Owner**: 한승완
+- **Status**: DONE
+- **Priority**: P0
 - **Step Goal**: engagement-owner가 Spring Boot 4 + Modulith 기반 engagement-svc를 생성하여 community/gamification 모듈 골격이 동작한다.
 - **Done When**:
-  - [ ] Spring Boot 4 + Modulith 프로젝트 초기화 완료
-  - [ ] community / gamification 2개 모듈 패키지 구조 생성
-  - [ ] `./gradlew build` 성공
-  - [ ] Modulith 구조 검증 테스트 통과 (`ApplicationModulesTest`)
-  - [ ] Docker 이미지 빌드 성공
+  - [x] Spring Boot 4 + Modulith 프로젝트 초기화 완료
+  - [x] community / gamification 모듈 패키지 구조 생성
+  - [x] `./gradlew build` 성공
+  - [x] Modulith 구조 검증 테스트 통과
+  - [x] Docker 이미지 빌드 성공
 - **Scope**:
   - In Scope:
-    - Spring Boot 4 + Modulith 프로젝트 생성
-    - community / gamification 모듈 패키지 구조
-    - build.gradle 의존성 설정
-    - ApplicationModulesTest 작성
-    - Dockerfile 작성
+    - Spring Boot 4 + Modulith 프로젝트 골격
+    - community / gamification `package-info.java`
+    - Dockerfile 및 빌드 검증
   - Out of Scope:
-    - 비즈니스 로직 구현
+    - 비즈니스 로직
     - DB 마이그레이션
     - Kafka 이벤트 연동
-- **Input**: 03_아키텍처_정의서 §Modulith 구조, platform-svc 골격 참조
-- **Instructions**:
-  1. Spring Initializr로 프로젝트 생성 (Spring Boot 4, Java 21, Gradle)
-  2. Modulith 의존성 추가 (spring-modulith-starter, spring-modulith-test)
-  3. community / gamification 패키지 생성 + package-info.java
-  4. 각 모듈에 빈 Controller + Service 클래스 생성
-  5. ApplicationModulesTest 작성 및 통과 확인
-  6. Dockerfile 작성 (multi-stage build)
-  7. docker compose에서 engagement-svc 실행 확인
-- **Output Format**: `engagement-svc/` 프로젝트 디렉토리 + Dockerfile + 테스트 통과 스크린샷
-- **Constraints**:
-  - Java 21 + Spring Boot 4 + Modulith
-  - 모듈 간 순환 의존 금지
-  - platform-svc와 동일한 빌드 구조 유지
-- **Duration**: 0.5일
-- **RULE Reference**: wiki 03_아키텍처_정의서 §Modulith, wiki 18_기술_스택_정의서
-- **Assignee**: @engagement-owner
-- **Reviewer**: @team-lead
+- **Dependencies**: 없음
+- **Due Date**: 2026-05-16
 
-**Status**: [ ] Not Started / [ ] In Progress / [x] Done
+## TASK-EG-002
 
----
-
-## Step 2: community 그룹 CRUD
-
+- **Task ID**: TASK-EG-002
+- **Title**: community 그룹 CRUD
+- **Owner**: 한승완
+- **Status**: DONE
+- **Priority**: P0
 - **Step Goal**: 로그인 사용자가 학습 그룹을 생성/조회/수정/삭제할 수 있다.
 - **Done When**:
-  - [ ] `POST /groups` → 그룹 생성 (이름, 설명, 공개여부)
-  - [ ] `GET /groups` → 그룹 목록 조회 (페이징)
-  - [ ] `GET /groups/{id}` → 그룹 상세 조회
-  - [ ] `PUT /groups/{id}` → 그룹 정보 수정 (소유자만)
-  - [ ] `DELETE /groups/{id}` → 그룹 삭제 (소유자만)
-  - [ ] groups 테이블 Flyway 마이그레이션 완료
-  - [ ] 통합 테스트 통과
+  - [x] 그룹 생성/목록/상세/수정/삭제 API 구현
+  - [x] 소유자 권한 검증 구현
+  - [x] Soft delete 및 사용자별 그룹 생성 제한 구현
+  - [x] Flyway 마이그레이션 완료
+  - [x] WebMvcTest 및 통합 테스트 통과
 - **Scope**:
   - In Scope:
-    - groups 테이블 설계 + Flyway 마이그레이션
-    - Group 엔티티 + Repository
-    - GroupService CRUD 로직
-    - GroupController REST API
-    - 소유자 권한 검증
-    - 페이징 조회
-    - 통합 테스트
+    - `groups` 테이블, Entity, Repository, Service, Controller
+    - JWT subject 기반 사용자 식별
+    - 페이징/커서 기반 목록 조회
   - Out of Scope:
-    - 그룹 검색 (OpenSearch — W3)
-    - 그룹 카테고리/태그
+    - OpenSearch 기반 그룹 검색
     - 그룹 이미지 업로드
-- **Input**: PRD_W1 그룹 기능 요구사항, JWT 인증 토큰 (platform-svc)
-- **Instructions**:
-  1. groups 테이블 DDL 작성 (id, name, description, is_public, owner_id, created_at, updated_at)
-  2. Flyway V1 마이그레이션 파일 생성
-  3. Group 엔티티 + JPA Repository 작성
-  4. GroupService 구현 (create, findAll, findById, update, delete)
-  5. 소유자 권한 검증 로직 (수정/삭제 시 owner_id 확인)
-  6. GroupController REST API 구현 (5개 엔드포인트)
-  7. 페이징 처리 (Pageable, 기본 20건)
-  8. 통합 테스트 작성 (@SpringBootTest + TestContainers)
-- **Output Format**: community 모듈 코드 + Flyway 마이그레이션 + API 문서 (Swagger)
-- **Constraints**:
-  - 그룹명 최대 100자, 설명 최대 500자
-  - 한 사용자 최대 10개 그룹 생성 가능
-  - Soft delete (deleted_at 컬럼)
-- **Duration**: 1.5일
-- **RULE Reference**: wiki 03_아키텍처_정의서 §REST API 규칙, wiki 09_Git_규칙_정의서 §커밋 컨벤션
-- **Assignee**: @engagement-owner
-- **Reviewer**: @team-lead
+    - platform-svc JWT 완전 연동
+- **Dependencies**: TASK-EG-001
+- **Due Date**: 2026-05-16
 
-**Status**: [ ] Not Started / [ ] In Progress / [x] Done
+## TASK-EG-003
 
----
-
-## Step 3: community 멤버 관리
-
+- **Task ID**: TASK-EG-003
+- **Title**: community 멤버 관리
+- **Owner**: 한승완
+- **Status**: DONE
+- **Priority**: P0
 - **Step Goal**: 그룹 소유자가 멤버를 초대/가입승인/탈퇴시킬 수 있고, 멤버는 자발적으로 가입/탈퇴할 수 있다.
 - **Done When**:
-  - [ ] `POST /groups/{id}/members/invite` → 멤버 초대 (소유자)
-  - [ ] `POST /groups/{id}/members/join` → 가입 신청 (사용자)
-  - [ ] `PUT /groups/{id}/members/{memberId}/approve` → 가입 승인 (소유자)
-  - [ ] `DELETE /groups/{id}/members/{memberId}` → 멤버 탈퇴/강퇴
-  - [ ] `GET /groups/{id}/members` → 멤버 목록 조회
-  - [ ] 멤버 역할 구분 (OWNER, ADMIN, MEMBER)
-  - [ ] group_members 테이블 마이그레이션 완료
-  - [ ] 통합 테스트 통과
+  - [x] 멤버 초대/가입/승인/탈퇴/강퇴 API 구현
+  - [x] OWNER/ADMIN/MEMBER 역할 검증 구현
+  - [x] PENDING/ACTIVE/KICKED 상태 전이 구현
+  - [x] `group_members` 마이그레이션 완료
+  - [x] 역할별 테스트 통과
 - **Scope**:
   - In Scope:
-    - group_members 테이블 설계 + Flyway 마이그레이션
-    - GroupMember 엔티티 + Repository
-    - 멤버 초대/가입/승인/탈퇴/강퇴 로직
-    - 멤버 역할 관리 (OWNER, ADMIN, MEMBER)
-    - 멤버 목록 조회 API
-    - 통합 테스트
+    - `group_members` 테이블
+    - 역할 기반 멤버 관리
+    - 공개/비공개 그룹 가입 정책
   - Out of Scope:
-    - 초대 이메일/알림 발송 (W2)
+    - 초대 이메일/알림 발송
     - 멤버 활동 이력
-    - 멤버 수 제한 정책
-- **Input**: groups 테이블, JWT 인증 토큰, PRD_W1 멤버 관리 요구사항
-- **Instructions**:
-  1. group_members 테이블 DDL 작성 (group_id, user_id, role, status, joined_at)
-  2. Flyway V2 마이그레이션 파일 생성
-  3. GroupMember 엔티티 + Repository 작성
-  4. MemberService 구현 (invite, join, approve, leave, kick)
-  5. 역할 기반 권한 검증 (OWNER: 모든 작업, ADMIN: 승인/강퇴, MEMBER: 탈퇴만)
-  6. MemberController REST API 구현
-  7. 멤버 상태 관리 (PENDING, ACTIVE, KICKED)
-  8. 통합 테스트 작성 (역할별 시나리오)
-- **Output Format**: community 모듈 멤버 관리 코드 + Flyway 마이그레이션 + 테스트 코드
-- **Constraints**:
-  - 공개 그룹: 즉시 가입, 비공개 그룹: 승인 필요
-  - OWNER는 탈퇴 불가 (소유권 이전 후 탈퇴)
-  - 강퇴된 멤버는 7일간 재가입 불가
-- **Duration**: 2일
-- **RULE Reference**: wiki 03_아키텍처_정의서 §REST API 규칙, wiki 09_Git_규칙_정의서 §커밋 컨벤션
-- **Assignee**: @engagement-owner
-- **Reviewer**: @team-lead
+    - 초대 수락/거절 고도화 (workflow-guide 기준 Step 7 범위 아님)
+- **Dependencies**: TASK-EG-002
+- **Due Date**: 2026-05-16
 
-**Status**: [ ] Not Started / [ ] In Progress / [x] Done
+## TASK-EG-004
 
----
-
-## W2 (2026-05-19 ~ 2026-05-23)
-
----
-
-## Step 4: Kafka card.reviewed 이벤트 소비 및 XP 적립
-
-- **Step Name**: card.reviewed XP 적립
-- **Step Goal**: 시스템이 card.reviewed Kafka 이벤트를 소비하여 사용자에게 XP를 적립하고, 사용자가 누적 XP를 조회할 수 있다.
+- **Task ID**: TASK-EG-004
+- **Title**: gamification XP 기초
+- **Owner**: 한승완
+- **Status**: DONE
+- **Priority**: P0
+- **Step Goal**: 시스템이 내부 XP 적립 유스케이스를 통해 `xp_events`를 기록하고 사용자가 자신의 XP 프로필과 이력을 조회할 수 있다.
 - **Done When**:
-  - [ ] Kafka Consumer가 card.reviewed 이벤트 수신
-  - [ ] 이벤트 수신 시 사용자 XP 자동 적립
-  - [ ] user_xp 테이블에 XP 이력 저장
-  - [ ] `GET /gamification/xp/me` → 누적 XP 조회
-  - [ ] 중복 이벤트 처리 방지 (멱등성)
-  - [ ] 통합 테스트 통과
+  - [x] `xp_events` 테이블 구현
+  - [x] `user_profiles_gamification` 테이블 구현
+  - [x] XP 적립 멱등성 구현
+  - [x] `GET /gamification/profile` 구현
+  - [x] `GET /gamification/xp/history` 구현
+  - [x] 테스트 통과
 - **Scope**:
   - In Scope:
-    - Kafka Consumer 구현 (card.reviewed 토픽)
-    - user_xp 테이블 설계 + Flyway 마이그레이션
-    - XP 적립 로직 (이벤트 → XP 계산 → 저장)
-    - 누적 XP 조회 API
-    - 멱등성 처리 (event_id 기반 중복 방지)
-    - 통합 테스트 (Embedded Kafka)
+    - XP 이벤트 로그와 사용자 프로필 집계
+    - 기본 활동 10 XP 규칙
+    - JWT subject 기반 조회
   - Out of Scope:
-    - XP 기반 레벨 시스템 (Step 6)
-    - XP 차감/소모
-    - XP 부스트/이벤트
-- **Input**: card.reviewed Kafka 이벤트, 사용자 정보, XP 계산 규칙
-- **Instructions**:
-  1. user_xp 테이블 DDL 작성 (id, user_id, xp_amount, source_event, event_id, created_at)
-  2. Flyway 마이그레이션 파일 생성
-  3. Kafka Consumer 구현 (@KafkaListener, card.reviewed 토픽)
-  4. XP 계산 로직 구현 (카드 복습 1회 = 10 XP)
-  5. 멱등성 처리 (event_id UNIQUE 제약)
-  6. 누적 XP 조회 API 구현 (`GET /gamification/xp/me`)
-  7. 통합 테스트 작성 (Embedded Kafka + TestContainers)
-- **Output Format**: gamification 모듈 XP 코드 + Kafka Consumer + 테스트 코드
-- **Constraints**:
-  - 카드 복습 1회 = 10 XP (고정)
-  - 멱등성: event_id 기반 중복 방지
-  - XP 적립 지연: 이벤트 수신 후 3초 이내
-- **Duration**: 1.5일
-- **RULE Reference**: wiki 03_아키텍처_정의서 §이벤트 설계, wiki 18_기술_스택_정의서 §Kafka
-- **Assignee**: @engagement-owner
-- **Reviewer**: @team-lead
+    - Kafka Producer 연동, TASK-EG-007에서 처리
+    - Kafka Consumer 연동, TASK-EG-009에서 처리
+    - 배지/리더보드 완성, TASK-EG-006에서 처리
+- **Dependencies**: TASK-EG-001
+- **Due Date**: 2026-05-23
 
-**Status**: [ ] Not Started / [ ] In Progress / [x] Done
+## TASK-EG-005
 
----
-
-## Step 5: 덱/노트 공유 및 검색/복사
-
-- **Step Name**: 공유 토큰 기반 콘텐츠 공유
-- **Step Goal**: 사용자가 덱/노트를 share_token으로 공유하고, 다른 사용자가 공유 콘텐츠를 검색하여 복사할 수 있다.
+- **Task ID**: TASK-EG-005
+- **Title**: community 공유
+- **Owner**: 한승완
+- **Status**: DONE
+- **Priority**: P0
+- **Step Goal**: 사용자가 덱/노트를 `share_token`으로 공유하고, 다른 사용자가 공유 콘텐츠를 검색하여 복사할 수 있다.
 - **Done When**:
-  - [ ] `POST /community/shares` → share_token 생성 (덱/노트)
-  - [ ] `GET /community/shares/{token}` → 공유 콘텐츠 조회
-  - [ ] `POST /community/shares/{token}/copy` → 공유 콘텐츠 복사
-  - [ ] `GET /community/shares/search` → 공유 콘텐츠 검색
-  - [ ] shared_contents 테이블 마이그레이션 완료
-  - [ ] 통합 테스트 통과
+  - [x] 공유 등록 API 구현
+  - [x] 토큰 기반 공유 콘텐츠 조회 API 구현
+  - [x] 공유 콘텐츠 검색 API 구현
+  - [x] 공유 콘텐츠 fork API 구현
+  - [x] 삭제 및 soft delete 구현
+  - [x] 테스트 통과
 - **Scope**:
   - In Scope:
-    - shared_contents 테이블 설계 + Flyway 마이그레이션
-    - share_token 생성 API (UUID 기반)
-    - 공유 콘텐츠 조회 API (토큰 기반)
-    - 공유 콘텐츠 복사 API
-    - 공유 콘텐츠 검색 API (제목/태그)
-    - 통합 테스트
+    - `shared_contents` 테이블
+    - UUID 기반 URL-safe share token
+    - `DECK` / `NOTE` 콘텐츠 타입
+    - DB 기반 키워드 검색
   - Out of Scope:
-    - 공유 콘텐츠 댓글/평점
-    - 공유 만료 정책
-    - OpenSearch 기반 검색 (DB LIKE 검색)
-- **Input**: 덱/노트 데이터, JWT 인증 토큰, community 모듈
-- **Instructions**:
-  1. shared_contents 테이블 DDL 작성 (id, share_token, content_type, content_id, owner_id, title, description, created_at)
-  2. Flyway 마이그레이션 파일 생성
-  3. share_token 생성 API 구현 (UUID v4)
-  4. 공유 콘텐츠 조회 API 구현 (토큰 기반, 인증 불필요)
-  5. 공유 콘텐츠 복사 API 구현 (인증 필요, 원본 복제)
-  6. 공유 콘텐츠 검색 API 구현 (DB LIKE 검색, 페이징)
-  7. 통합 테스트 작성
-- **Output Format**: community 모듈 공유 코드 + Flyway 마이그레이션 + 테스트 코드
-- **Constraints**:
-  - share_token: UUID v4 (추측 불가)
-  - 공유 콘텐츠 조회는 인증 불필요 (공개 접근)
-  - 복사 시 원본과의 연결 유지 (source_share_id)
-- **Duration**: 1.5일
-- **RULE Reference**: wiki 03_아키텍처_정의서 §REST API 규칙, wiki 09_Git_규칙_정의서 §커밋 컨벤션
-- **Assignee**: @engagement-owner
-- **Reviewer**: @team-lead
+    - 공유 콘텐츠 신고, TASK-EG-008에서 처리
+    - OpenSearch 기반 검색
+    - 외부 알림/이벤트 연동
+- **Dependencies**: TASK-EG-002
+- **Due Date**: 2026-05-23
 
-**Status**: [ ] Not Started / [ ] In Progress / [x] Done
+## TASK-EG-006
 
----
-
-## W3 (2026-05-26 ~ 2026-05-29, 5/25 부처님오신날 제외 — 이벤트 발행자)
-
----
-
-## Step 6: 레벨/배지/스트릭/리더보드 시스템
-
-- **Step Name**: 게이미피케이션 레벨/배지/스트릭/리더보드
-- **Step Goal**: 시스템이 XP 누적에 따라 자동으로 레벨을 상승시키고, 조건 달성 시 배지를 수여하며, 연속 학습 스트릭을 추적하고, 리더보드를 제공한다.
+- **Task ID**: TASK-EG-006
+- **Title**: gamification 완성
+- **Owner**: 한승완
+- **Status**: DONE
+- **Current Progress**: Step 6 완료. badges/user_badges/user_streaks, condition-based badge award, XP level calculation, streak tracking, leaderboard, `/gamification/me`, `/leaderboard`, `/badges`, Swagger docs exposure, Mockito/WebMvc/integration tests verified.
+- **Priority**: P0
+- **Step Goal**: 시스템이 XP 누적에 따라 레벨을 계산하고, 조건 달성 시 배지를 수여하며, 스트릭과 리더보드를 제공한다.
 - **Done When**:
-  - [x] XP 누적 → 레벨 자동 상승 (레벨 테이블 기준)
-  - [x] 조건 달성 시 배지 자동 수여 (e.g., 7일 연속 학습)
-  - [x] 일별 학습 스트릭 추적 (연속 일수, KST 기준)
-  - [x] `GET /gamification/leaderboard` → XP 리더보드 (Redis ZSet)
-  - [x] `GET /gamification/profile` → 내 레벨/배지/스트릭 조회
-  - [x] 통합 테스트 통과
+  - [x] 배지 조건 평가 및 수여 구현
+  - [x] XP 기반 레벨 계산 구현
+  - [x] `user_profiles_gamification` 기반 스트릭 추적 구현
+  - [x] 리더보드 조회 구현
+  - [x] `GET /gamification/me`, `/leaderboard`, `/badges` 테스트 통과
 - **Scope**:
   - In Scope:
-    - level_definitions 테이블 (레벨별 필요 XP 정의)
-    - badges/user_badges 테이블 + 배지 조건 엔진 (criteria_json)
-    - user_profiles_gamification 컬럼 기반 스트릭 추적 (별도 user_streaks 테이블 불필요)
-    - 리더보드 조회 API (Redis ZSet → DB 폴백)
-    - 내 게이미피케이션 현황 조회 API
-    - 통합 테스트
+    - `badges`, `user_badges`, `user_streaks`
+    - 레벨/스트릭/리더보드 서비스
+    - 사용자 정보 최소 노출
+    - `/v3/api-docs` gamification endpoint 노출 확인
   - Out of Scope:
     - 배지 이미지 관리
-    - 시즌/리셋 정책
+    - 시즌 리셋 정책
     - 팀 리더보드
-- **Input**: user_xp 데이터, 레벨/배지 조건 정의, Redis
-- **Instructions**:
-  1. levels 테이블 DDL + 초기 데이터 (Lv1=0, Lv2=100, Lv3=300, ...)
-  2. user_badges 테이블 DDL + Flyway 마이그레이션
-  3. user_streaks 테이블 DDL + Flyway 마이그레이션
-  4. 레벨 상승 로직 구현 (XP 적립 시 레벨 체크)
-  5. 배지 조건 엔진 구현 (스트릭 7일, XP 1000 등)
-  6. 스트릭 추적 로직 구현 (일별 학습 여부 체크)
-  7. 리더보드 API 구현 (Redis Sorted Set 활용)
-  8. 내 현황 조회 API 구현
-  9. 통합 테스트 작성
-- **Output Format**: gamification 모듈 레벨/배지/스트릭 코드 + Flyway 마이그레이션 + 테스트 코드
-- **Constraints**:
-  - 레벨 상승은 실시간 (XP 적립 즉시 체크)
-  - 리더보드 캐시: Redis, TTL 5분
-  - 스트릭 리셋: 자정(KST) 기준, 1일 미학습 시 리셋
-- **Duration**: 2일
-- **RULE Reference**: wiki 03_아키텍처_정의서 §게이미피케이션, wiki 18_기술_스택_정의서 §Redis
-- **Assignee**: @engagement-owner
-- **Reviewer**: @team-lead
+    - Flutter 화면 연동
+  - Constraints:
+    - JWT subject 기반 본인 데이터 조회만 허용
+    - XP 적립은 서버 사이드 검증과 `eventId` 멱등성으로 중복 적립 방지
+    - 리더보드는 초기 범위에서 userId/nickname placeholder/xp/level만 노출
+  - Output Format:
+    - `UserGamificationResponse`: xp, level, currentStreak, longestStreak, badges
+    - `BadgeResponse`: code, name, description, iconUrl, conditionType, conditionValue, earnedAt
+    - `LeaderboardEntryResponse`: rank, userId, nickname, xp, level
+  - Verification:
+    - `GamificationStep6ServiceTests`: Mockito service tests
+    - `GamificationControllerWebMvcTest`: WebMvc slice tests
+    - `EngagementApiSmokeTests`: JWT integration flow and `/v3/api-docs`
+    - `./gradlew.bat test` 성공 (2026-05-28)
+- **Dependencies**: TASK-EG-004
+- **Due Date**: 2026-05-29
 
-**Status**: [ ] Not Started / [ ] In Progress / [x] Done
+## TASK-EG-007
 
----
-
-## Step 7: 게이미피케이션 Kafka 이벤트 발행
-
-- **Step Name**: gamification 이벤트 발행
-- **Step Goal**: engagement-svc가 gamification.level_up/badge_earned Kafka 이벤트를 발행하여 알림을 트리거한다.
+- **Task ID**: TASK-EG-007
+- **Title**: Kafka 연동 — gamification.level_up / gamification.badge_earned 이벤트 발행
+- **Owner**: 한승완
+- **Status**: IN_PROGRESS
+- **Current Progress**: Kafka Producer를 D-002/EVENT_CONTRACT_STANDARD 기준으로 리팩토링했다. `synapse-shared`의 `com.synapse.engagement.LevelUp` / `BadgeEarned` Avro 스키마를 `src/main/avro/engagement/`에 벤더링하고, Confluent `KafkaAvroSerializer` + Schema Registry 경로로 발행한다. EmbeddedKafka + mock Schema Registry publish/consume, notification slice/contract 테스트, Kafka ACL 계약 시뮬레이션은 통과했다. notification-svc 라이브 연동은 W5 통합/배포 검증 항목으로 분리했고, Step 7 잔여 항목은 실제 Kafka broker ACL 적용 확인이다.
+- **Priority**: P0
+- **Step Goal**: engagement-svc가 레벨업과 배지 획득 시 `gamification.level_up`, `gamification.badge_earned` 이벤트를 발행하여 downstream 서비스가 알림/감사 처리를 할 수 있게 한다.
 - **Done When**:
-  - [ ] 레벨 상승 시 gamification.level_up 이벤트 발행
-  - [ ] 배지 수여 시 gamification.badge_earned 이벤트 발행
-  - [ ] 이벤트 스키마 Schema Registry 등록
-  - [ ] platform-svc notification 모듈에서 이벤트 수신 확인
-  - [ ] 통합 테스트 통과
+  - [x] `gamification.level_up` 이벤트 스키마 정의
+  - [x] `gamification.badge_earned` 이벤트 스키마 정의
+  - [x] `GamificationKafkaProducer` 구현
+  - [x] 레벨업/배지 수여 시점에 Producer 호출
+  - [x] EmbeddedKafka 또는 Testcontainers Kafka 테스트 통과
 - **Scope**:
   - In Scope:
-    - Kafka Producer 구현 (gamification.level_up, gamification.badge_earned)
-    - Avro 스키마 정의 + Schema Registry 등록
-    - 레벨 상승/배지 수여 시 이벤트 발행 로직
-    - 이벤트 발행 실패 시 재시도
-    - 통합 테스트 (Embedded Kafka)
+    - `gamification.level_up` Producer
+    - `gamification.badge_earned` Producer
+    - tenantId 기반 파티션 키
+    - shared Avro 스키마 및 Schema Registry 문서화
+    - Producer 멱등성 설정
   - Out of Scope:
-    - 알림 발송 로직 (platform-svc 담당)
-    - 이벤트 소싱
-    - 이벤트 버전 관리
-- **Input**: 레벨/배지 로직, Kafka 토픽, Schema Registry
-- **Instructions**:
-  1. gamification.level_up Avro 스키마 정의 (userId, newLevel, xp, timestamp)
-  2. gamification.badge_earned Avro 스키마 정의 (userId, badgeId, badgeName, timestamp)
-  3. Schema Registry에 스키마 등록
-  4. Kafka Producer 구현 (KafkaTemplate)
-  5. 레벨 상승 로직에 이벤트 발행 추가
-  6. 배지 수여 로직에 이벤트 발행 추가
-  7. 통합 테스트 작성 (이벤트 발행 검증)
-- **Output Format**: gamification 모듈 Kafka Producer 코드 + Avro 스키마 + 테스트 코드
-- **Constraints**:
-  - 이벤트 발행: at-least-once
-  - 스키마 호환성: BACKWARD
-  - 이벤트 발행 실패 시 로그 기록 (비즈니스 로직 실패 X)
-- **Duration**: 0.5일
-- **RULE Reference**: wiki 03_아키텍처_정의서 §이벤트 설계, wiki 18_기술_스택_정의서 §Kafka
-- **Assignee**: @engagement-owner
-- **Reviewer**: @team-lead
+    - `card.reviewed` Consumer
+    - notification 서비스 내부 구현
+    - 커뮤니티 멤버십 초대/가입신청 관리
+  - Constraints:
+    - Kafka 토픽 ACL은 engagement-svc 발행 권한만 허용한다
+    - 이벤트 페이로드에는 민감 정보를 포함하지 않는다
+    - 스키마 호환성은 BACKWARD 모드를 기준으로 한다
+    - Kafka value는 CloudEvents JSON envelope이 아니라 topic별 bare Avro record다
+    - Avro record에는 공통 메타 `eventId`, `tenantId`, `occurredAt`을 포함한다
+    - Producer는 멱등성 설정을 사용한다
+  - Output Format:
+    - `com.synapse.engagement.LevelUp`: eventId, tenantId, userId, newLevel, previousLevel, totalXp, occurredAt
+    - `com.synapse.engagement.BadgeEarned`: eventId, tenantId, userId, badgeId, badgeCode, badgeName, occurredAt
+    - Consumer guide: topic, schema, partition key, retry note
+  - Verification:
+    - Producer publish/consume test: `GamificationKafkaProducerTests`
+    - Mock notification contract test: `GamificationNotificationContractTests`
+    - ACL contract simulation test: `GamificationKafkaAclSimulationTests`
+    - Service trigger test: `GamificationStep7EventServiceTests`
+    - Full regression: `./gradlew.bat test` 성공 (2026-06-01)
+    - Docker Compose Kafka + kafka-console-consumer 수동 확인 성공 (2026-05-28)
+    - Schema Registry subjects 등록 성공: `engagement.gamification.level-up-v1-value`, `engagement.gamification.badge-earned-v1-value`
+    - Notification slice/contract: `.\gradlew.bat test --tests "com.synapse.engagement.gamification.application.event.GamificationNotificationContractTests"` 성공 (2026-06-08)
+    - Pending manual check: 실제 Kafka broker ACL 적용 확인
+- **Dependencies**: TASK-EG-006
+- **Due Date**: 2026-05-29
 
-**Status**: [ ] Not Started / [ ] In Progress / [ ] Done
+## TASK-EG-008
 
----
-
-## Step 8: 부적절 콘텐츠 신고 및 관리자 처리
-
-- **Step Name**: 콘텐츠 신고/관리자 처리
-- **Step Goal**: 사용자가 부적절한 콘텐츠를 신고하고, 관리자가 신고를 처리(승인/거부/숨김)할 수 있다.
+- **Task ID**: TASK-EG-008
+- **Title**: community 신고 + Admin 모더레이션
+- **Owner**: 한승완
+- **Status**: DONE
+- **Current Progress**: workflow-guide Step 8 기준으로 신고 접수/관리자 처리 API를 구현했다. `reports` 테이블, `PENDING/APPROVED/REJECTED` 상태, 중복 신고 방지, ADMIN role claim 검증, 신고자 미노출 응답, 승인 시 공유 콘텐츠/스터디 그룹 soft delete 처리, WebMvc/Service/Smoke 테스트를 추가했다. `USER` target은 engagement-svc가 계정 데이터를 소유하지 않으므로 신고 상태 승인까지만 처리하고 실제 계정 제재는 platform/auth 영역으로 남긴다.
+- **Priority**: P0
+- **Step Goal**: 사용자가 부적절한 콘텐츠를 신고하고, 관리자가 신고를 조회하여 승인/거부 처리할 수 있다.
 - **Done When**:
-  - [ ] `POST /community/reports` → 콘텐츠 신고
-  - [ ] `GET /admin/reports` → 신고 목록 조회 (관리자)
-  - [ ] `PUT /admin/reports/{id}/approve` → 신고 승인 (콘텐츠 숨김)
-  - [ ] `PUT /admin/reports/{id}/reject` → 신고 거부
-  - [ ] reports 테이블 마이그레이션 완료
-  - [ ] 통합 테스트 통과
+  - [x] 신고 접수 API 구현
+  - [x] 관리자 신고 목록 API 구현
+  - [x] 관리자 신고 처리 API 구현
+  - [x] 중복 신고 방지 구현
+  - [x] 403/409 테스트 통과
 - **Scope**:
   - In Scope:
-    - reports 테이블 설계 + Flyway 마이그레이션
-    - 신고 접수 API (사용자)
-    - 신고 목록 조회 API (관리자)
-    - 신고 처리 API (승인/거부/숨김)
-    - 승인 시 콘텐츠 숨김 처리
-    - 통합 테스트
+    - `reports` 테이블
+    - target type: `SHARED_DECK`, `SHARED_NOTE`, `STUDY_GROUP`, `USER`
+    - 신고자 익명성 보장
+    - 콘텐츠 숨김/처리 기록 (`adminNote`, `resolvedAt`)
+    - ADMIN role claim 기반 관리자 API 403 처리
   - Out of Scope:
-    - 자동 신고 감지 (AI 기반)
+    - AI 자동 감지
     - 신고자 알림
-    - 누적 신고 자동 차단
-- **Input**: 콘텐츠 데이터, JWT 인증 토큰, 관리자 권한
-- **Instructions**:
-  1. reports 테이블 DDL 작성 (id, reporter_id, content_type, content_id, reason, status, resolved_by, resolved_at, created_at)
-  2. Flyway 마이그레이션 파일 생성
-  3. 신고 접수 API 구현 (`POST /community/reports`)
-  4. 신고 목록 조회 API 구현 (`GET /admin/reports` + 상태 필터)
-  5. 신고 승인 API 구현 (콘텐츠 is_hidden = true 처리)
-  6. 신고 거부 API 구현 (status → REJECTED)
-  7. 통합 테스트 작성 (사용자 신고 + 관리자 처리)
-- **Output Format**: community 모듈 신고 코드 + Flyway 마이그레이션 + 테스트 코드
-- **Constraints**:
-  - 동일 사용자가 같은 콘텐츠 중복 신고 불가
-  - 신고 사유: SPAM, INAPPROPRIATE, HARASSMENT, OTHER
-  - 관리자 권한(ADMIN role) 필수 (처리 API)
-- **Duration**: 1.5일
-- **RULE Reference**: wiki 03_아키텍처_정의서 §REST API 규칙, wiki 09_Git_규칙_정의서 §커밋 컨벤션
-- **Assignee**: @engagement-owner
-- **Reviewer**: @team-lead
+    - 별도 `community.report.approved` 토픽
+    - shared Avro 계약이 없는 moderation audit Kafka 이벤트
+    - engagement-svc 외부 계정 제재
+  - Constraints:
+    - 신고자는 JWT subject에서만 결정하고 request body로 받지 않는다
+    - 응답에는 `reporterId`를 포함하지 않아 신고 대상자에게 신고자를 노출하지 않는다
+    - 동일 reporter + targetType + targetId 조합은 1회만 허용한다
+    - 관리자 처리는 `APPROVED` 또는 `REJECTED`만 허용하고 이미 처리된 신고는 재처리하지 않는다
+  - Output Format:
+    - `ReportCreateRequest`: targetType, targetId, reason
+    - `ReportModerateRequest`: status, adminNote
+    - `ReportResponse`: id, targetType, targetId, reason, status, adminNote, createdAt, resolvedAt
+  - Verification:
+    - `ReportServiceStep8Tests`: 중복 신고 409, 승인 시 대상 숨김, 거부 처리
+    - `ReportControllerWebMvcTest`: 신고 생성, 403 non-admin, 409 duplicate, 관리자 목록/처리
+    - `EngagementApiSmokeTests`: 신고 생성→중복 방지→비관리자 403→관리자 승인 flow 및 `/v3/api-docs` 노출
+- **Dependencies**: TASK-EG-005
+- **Due Date**: 2026-05-29
 
-**Status**: [ ] Not Started / [ ] In Progress / [ ] Done
+## TASK-EG-009
 
----
-
-## W5 (2026-06-08 ~ 2026-06-12 — E2E + 발표 준비)
-
----
-
-## Step 9: 게이미피케이션 전체 플로우 E2E 테스트
-
-- **Step Name**: 게이미피케이션 E2E 테스트
-- **Step Goal**: 게이미피케이션 전체 플로우(복습→XP→배지→레벨업→리더보드→알림) E2E가 통과한다.
+- **Task ID**: TASK-EG-009
+- **Title**: Kafka 이벤트 연동
+- **Owner**: 한승완
+- **Status**: DONE
+- **Current Progress**: Step 9 기준으로 `learning.card.review-completed-v1` Avro Consumer를 XP 적립 유스케이스에 연결하고, 레벨업/배지 수여 시 `engagement.gamification.level-up-v1`, `engagement.gamification.badge-earned-v1` Avro 이벤트를 발행하도록 통합 검증했다. Consumer 실패 처리는 1초 간격 3회 재시도 후 `{원본토픽}.dlq` 발행으로 정리했다.
+- **Priority**: P0
+- **Step Goal**: engagement-svc가 `learning.card.review-completed-v1` 이벤트를 소비해 XP를 적립하고, 레벨업/배지 수여 이벤트를 발행한다.
 - **Done When**:
-  - [ ] card.reviewed → XP 적립 → 레벨 상승 시나리오 통과
-  - [ ] 배지 조건 달성 → 배지 수여 → 알림 발송 시나리오 통과
-  - [ ] 스트릭 추적 → 7일 연속 → 배지 수여 시나리오 통과
-  - [ ] 리더보드 조회 시나리오 통과
-  - [ ] 전체 플로우 연속 실행 통과
-  - [ ] 실패 케이스 식별 및 이슈 등록
+  - [x] `learning.card.review-completed-v1` 소비 계약 확정
+  - [x] XP 적립 Consumer 구현
+  - [x] level up / badge earned Producer 구현
+  - [x] 중복 수신 시 XP 중복 적립 방지
+  - [x] Kafka 통합 테스트 통과
 - **Scope**:
   - In Scope:
-    - card.reviewed → XP → 레벨 E2E
-    - 배지 조건 → 수여 → 알림 E2E
-    - 스트릭 → 배지 E2E
-    - 리더보드 조회 E2E
-    - 서비스 간 이벤트 흐름 검증
-    - 실패 케이스 이슈 등록
+    - Consumer/Producer 설정
+    - Avro + Schema Registry 규칙 반영
+    - DLQ/재처리 정책 문서화
   - Out of Scope:
-    - 부하/성능 테스트
-    - 프론트엔드 연동 테스트
-    - 데이터 마이그레이션 테스트
-- **Input**: staging 환경, Kafka 토픽, 테스트 사용자 계정
-- **Instructions**:
-  1. E2E 테스트 환경 설정 (staging, 테스트 데이터 초기화)
-  2. card.reviewed 이벤트 발행 → XP 적립 확인
-  3. XP 누적 → 레벨 상승 확인
-  4. 배지 조건 시뮬레이션 → 배지 수여 확인
-  5. gamification.level_up/badge_earned 이벤트 → 알림 발송 확인
-  6. 리더보드 데이터 정합성 확인
-  7. 실패 케이스 식별 및 이슈 등록
-- **Output Format**: E2E 테스트 코드 + 테스트 결과 리포트
+    - notification 서비스 알림 구현
+    - 스키마 호환성 정책 변경
 - **Constraints**:
-  - Happy Path 100% 통과 필수
-  - 이벤트 전달 지연 < 5초
-  - 테스트 데이터 자동 정리 (teardown)
-- **Duration**: 1.5일
-- **RULE Reference**: wiki 03_아키텍처_정의서 §테스트 전략, wiki 09_Git_규칙_정의서 §이슈 관리
-- **Assignee**: @engagement-owner
-- **Reviewer**: @team-lead
+  - Kafka listener는 `synapse.kafka.enabled=true`일 때만 활성화한다.
+  - inbound `ReviewCompleted` 스키마에는 `eventId`가 없어 `cardId + reviewedAt` 조합을 XP 멱등성 키로 사용한다.
+  - 이벤트 payload에는 민감 정보를 포함하지 않고 `tenantId`를 partition key로 사용한다.
+  - Consumer 실패는 1초 간격 3회 재시도 후 `{원본토픽}.dlq`로 발행한다.
+- **Output Format**:
+  - Consumer input: `com.synapse.learning.ReviewCompleted`
+  - Producer output: `com.synapse.engagement.LevelUp`, `com.synapse.engagement.BadgeEarned`
+- **Verification**:
+  - `EngagementKafkaEventHandlerTests`: UserRegistered/Profile 생성, ReviewCompleted XP 적립, 중복 XP skip
+  - `EngagementKafkaStep9IntegrationTests`: EmbeddedKafka `ReviewCompleted` → XP 적립 → level-up/badge-earned 발행
+  - `GamificationKafkaProducerTests`: Avro Producer publish/consume 검증
+- **Dependencies**: TASK-EG-004, TASK-EG-006
+- **Due Date**: 2026-06-05
 
-**Status**: [ ] Not Started / [ ] In Progress / [ ] Done
+## TASK-EG-010
 
----
-
-## Step 10: 커뮤니티 공유/신고 E2E 테스트 및 P0 버그 수정
-
-- **Step Name**: 커뮤니티 E2E/P0 버그 수정
-- **Step Goal**: 커뮤니티 공유/신고 플로우 E2E가 통과하고 P0 버그가 모두 수정된다.
+- **Task ID**: TASK-EG-010
+- **Title**: 게이미피케이션 E2E 테스트 + 버그 수정
+- **Owner**: 한승완
+- **Status**: DONE
+- **Current Progress**: Step 10 기준으로 `GamificationStep10E2ETests`를 추가해 복습 XP 적립, 최초 XP 배지, 레벨업, LEVEL_2 배지, 중복 이벤트 409 방지, 내 프로필 조회, XP 이력 조회, 리더보드 1위 반영까지 REST E2E로 검증했다. 신규 P0/P1/P2 실패는 없었고 전체 회귀 테스트가 통과했다.
+- **Priority**: P0
+- **Step Goal**: 게이미피케이션 플로우가 E2E로 통과하고 발견된 P0 버그가 수정된다.
 - **Done When**:
-  - [ ] 콘텐츠 공유 → 토큰 생성 → 조회 → 복사 시나리오 통과
-  - [ ] 콘텐츠 신고 → 관리자 처리 시나리오 통과
-  - [ ] P0 버그 전수 수정 완료
-  - [ ] 수정된 버그 재현 테스트 통과
-  - [ ] 회귀 테스트 전체 통과
+  - [x] 복습→XP→배지→레벨업→리더보드 시나리오 실행
+  - [x] 실패 항목 기록
+  - [x] P0/P1/P2 분류
+  - [x] P0 버그 수정: 신규 P0 없음
+  - [x] 회귀 테스트 통과
 - **Scope**:
   - In Scope:
-    - 공유 토큰 생성 → 조회 → 복사 E2E
-    - 신고 접수 → 관리자 처리 E2E
-    - P0 버그 전수 수정
-    - 버그 수정 후 재현 테스트
-    - 회귀 테스트 실행
+    - 게이미피케이션 E2E
+    - P0 버그 수정
+    - 커버리지 80% 이상 확인
   - Out of Scope:
-    - P1/P2 버그 수정
+    - 신규 기능 추가
+    - 성능 튜닝
+- **Constraints**:
+  - Step 10은 engagement-svc REST E2E와 Step 9 Kafka 통합 테스트 결과를 기준으로 검증한다.
+  - 실제 learning-svc/notification-svc를 포함한 MSA 전체 E2E는 별도 통합 환경 검증으로 남긴다.
+  - 프로젝트에 정량 커버리지 도구가 없어 80% 수치는 산출하지 않고 전체 회귀 테스트 통과를 기록한다.
+- **Verification**:
+  - `GamificationStep10E2ETests`: 복습 XP → 배지 → 레벨업 → 중복 방지 → 이력 → 리더보드 REST E2E
+  - `EngagementKafkaStep9IntegrationTests`: Kafka `ReviewCompleted` → XP 적립 → level-up/badge-earned 발행
+  - `EngagementApiSmokeTests`: gamification API docs 및 smoke flow
+  - Full regression: `.\gradlew.bat test` 성공 (2026-06-04)
+- **Dependencies**: TASK-EG-006, TASK-EG-009
+- **Due Date**: 2026-06-05
+
+## TASK-EG-011
+
+- **Task ID**: TASK-EG-011
+- **Title**: 커뮤니티 공유/신고 E2E 테스트 + 안정화
+- **Owner**: 한승완
+- **Status**: DONE
+- **Priority**: P0
+- **Step Goal**: 커뮤니티 공유/검색/복사 및 신고/처리 플로우가 E2E로 통과하고 P0 버그가 수정된다.
+- **Done When**:
+  - [x] 공유→검색→복사 시나리오 실행
+  - [x] 신고→관리자 처리 시나리오 실행
+  - [x] 실패 항목 기록
+  - [x] P0 버그 수정
+  - [x] 회귀 테스트 통과
+- **Current Progress**:
+  - Step 11 E2E 테스트 `CommunityStep11E2ETests` 추가
+  - 공유 생성, token 조회, 검색, fork, 원본 downloadCount 증가, sourceShareId 연결 검증
+  - 신고 생성, 중복 신고 409, 비관리자 admin API 403, 관리자 승인, 신고 대상 숨김 검증
+- **Constraints**:
+  - 신규 P0/P1/P2 버그 없음
+  - 정량 커버리지 리포트 태스크는 현재 Gradle 검증 흐름에 연결되어 있지 않아 E2E + 전체 회귀 테스트로 대체 확인
+- **Verification**:
+  - `.\gradlew.bat test --tests "com.synapse.engagement.community.CommunityStep11E2ETests"` → BUILD SUCCESSFUL
+  - `.\gradlew.bat test` → BUILD SUCCESSFUL
+- **Scope**:
+  - In Scope:
+    - 커뮤니티 전체 플로우 E2E
+    - P0 버그 수정
+    - API 문서 최신화
+  - Out of Scope:
+    - P1/P2 전체 수정
     - 새 기능 추가
-    - 성능 최적화
-- **Input**: staging 환경, P0 버그 목록 (GitHub Issues), 테스트 데이터
-- **Instructions**:
-  1. 공유 플로우 E2E 테스트 실행
-  2. 신고 플로우 E2E 테스트 실행
-  3. P0 버그 목록 확인 (GitHub Issues 필터)
-  4. 각 버그 재현 → 원인 분석 → 수정
-  5. 수정 후 재현 테스트 작성 및 통과 확인
-  6. 전체 회귀 테스트 실행
-  7. E2E + 회귀 테스트 결과 리포트 작성
-- **Output Format**: E2E 테스트 코드 + 버그 수정 PR 목록 + 테스트 결과 리포트
-- **Constraints**:
-  - P0 버그 0건 달성 필수
-  - 수정 시 회귀 방지 (테스트 추가 필수)
-  - E2E Happy Path 100% 통과
-- **Duration**: 1.5일
-- **RULE Reference**: wiki 09_Git_규칙_정의서 §이슈 관리, wiki 03_아키텍처_정의서 §테스트 전략
-- **Assignee**: @engagement-owner
-- **Reviewer**: @team-lead
+- **Dependencies**: TASK-EG-005, TASK-EG-008
+- **Due Date**: 2026-06-05
 
-**Status**: [ ] Not Started / [ ] In Progress / [ ] Done
+## TASK-EG-012
+
+- **Task ID**: TASK-EG-012
+- **Title**: 게이미피케이션 최종 E2E
+- **Owner**: 한승완
+- **Status**: DONE
+- **Current Progress**: Step 12 로컬 최종 E2E `GamificationStep12FinalE2ETests`를 추가해 learning `ReviewCompleted` → XP 적립 → 레벨업 → 배지 수여 → gamification Avro 이벤트 발행 → fake notification command 변환 → 프로필/이력/리더보드 조회 → 중복 이벤트 멱등성까지 검증했다. notification-svc 라이브 연동과 ECR/image-updater/EKS/MSK 배포 확인은 Step 12 완료 조건이 아니라 W5 통합/배포 검증 항목으로 분리했다.
+- **Priority**: P0
+- **Step Goal**: 발표 전 게이미피케이션 전체 플로우가 최종 E2E로 재검증된다.
+- **Done When**:
+  - [x] 복습→XP→레벨업 시나리오 통과
+  - [x] 배지 조건→수여→알림 시나리오 통과: notification slice/contract 테스트 기준
+  - [x] 리더보드 조회 시나리오 통과
+  - [x] 이벤트 중복/멱등성 확인
+  - [x] P0 버그 수정 및 회귀 테스트 완료: 신규 P0 없음, `.\gradlew.bat test` 통과
+- **Scope**:
+  - In Scope:
+    - 최종 E2E 확인
+    - 이벤트 멱등성 확인
+    - 발표 전 P0 정리
+  - Out of Scope:
+    - 신규 게이미피케이션 기능
+    - 장기 운영 모니터링
+- **Dependencies**: TASK-EG-010
+- **Due Date**: 2026-06-12
+
+## TASK-EG-013
+
+- **Task ID**: TASK-EG-013
+- **Title**: 커뮤니티 최종 E2E
+- **Owner**: 한승완
+- **Status**: DONE
+- **Current Progress**: Step 13 최종 E2E `CommunityStep13FinalE2ETests`를 추가해 공유 노트 생성/조회/검색, 신고 접수, 중복 신고 방지, 비관리자 403, 관리자 승인, 신고 대상 숨김, `platform.notification.notification-send-v1` Avro notification 발행까지 검증했다. 기존 `CommunityStep11E2ETests`의 공유 덱 생성→검색→복사→신고→관리자 처리 흐름과 함께 커뮤니티 최종 E2E 범위를 충족한다. 발표용 actor/data/API 흐름은 [Step 13 Community Demo Scenario](../demo/2026-06-08-step13-community-demo-scenario.md)에 분리 정리했다. 실제 notification-svc 라이브 소비/저장은 W5 통합/배포 검증 항목으로 분리했다.
+- **Priority**: P0
+- **Step Goal**: 발표 전 커뮤니티 공유/신고 플로우가 최종 E2E로 재검증되고 데모 데이터가 준비된다.
+- **Done When**:
+  - [x] 공유 덱 생성→검색→복사 시나리오 통과: [Step 13 Community Demo Scenario](../demo/2026-06-08-step13-community-demo-scenario.md)
+  - [x] 공유 노트 조회 시나리오 통과: [Step 13 Community Demo Scenario](../demo/2026-06-08-step13-community-demo-scenario.md)
+  - [x] 신고 접수→관리자 처리 시나리오 통과: [Step 13 Community Demo Scenario](../demo/2026-06-08-step13-community-demo-scenario.md)
+  - [x] engagement P0 버그 0건
+  - [x] 발표용 데모 데이터 준비: [Step 13 Community Demo Scenario](../demo/2026-06-08-step13-community-demo-scenario.md)에 결정적 actor/data/API 흐름 정리
+- **Scope**:
+  - In Scope:
+    - 커뮤니티 최종 E2E
+    - 권한/소유자 검증 실패 케이스
+    - 발표용 데모 데이터
+  - Out of Scope:
+    - 신규 커뮤니티 기능
+    - 운영 자동화
+- **Dependencies**: TASK-EG-011
+- **Due Date**: 2026-06-12
+
+---
+
+## RULE Reference
+
+| Area | Rule |
+|------|------|
+| Task structure | [14-task-structure.md](../../rules/14-task-structure.md) |
+| Working log | [12-working-log.md](../../rules/12-working-log.md) |
+| Security | [01-security.md](../../rules/01-security.md) |
+| Spring Modulith | [07-platform-spring.md](../../rules/07-platform-spring.md) |
+| Kafka / Avro | [08-kafka-event.md](../../rules/08-kafka-event.md) |

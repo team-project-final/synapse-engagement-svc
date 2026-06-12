@@ -1,0 +1,12 @@
+name: Flyway Guard
+
+on:
+  pull_request:
+    branches: [main, dev]
+  push:
+    branches: [main, dev]
+
+jobs:
+  guard:
+    # shared guard가 중복 버전, 기존 migration 수정, 신규 non-timestamp 버전을 PR에서 차단한다.
+    uses: team-project-final/synapse-shared/.github/workflows/flyway-guard.yml@main
