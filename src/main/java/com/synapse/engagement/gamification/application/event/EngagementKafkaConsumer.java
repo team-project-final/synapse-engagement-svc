@@ -16,7 +16,7 @@ public class EngagementKafkaConsumer {
     }
 
     @KafkaListener(
-            topics = "${synapse.kafka.topics.user-registered}",
+            topics = "#{@kafkaTopicResolver.userRegistered()}",
             groupId = "${spring.kafka.consumer.group-id:engagement-svc-group}",
             containerFactory = "specificRecordKafkaListenerContainerFactory"
     )
@@ -25,7 +25,7 @@ public class EngagementKafkaConsumer {
     }
 
     @KafkaListener(
-            topics = "${synapse.kafka.topics.review-completed}",
+            topics = "#{@kafkaTopicResolver.reviewCompleted()}",
             groupId = "${spring.kafka.consumer.group-id:engagement-svc-group}",
             containerFactory = "specificRecordKafkaListenerContainerFactory"
     )

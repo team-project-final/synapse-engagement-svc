@@ -61,6 +61,7 @@ synapse:
     issuer: ${JWT_ISSUER:synapse-auth}
   kafka:
     enabled: ${KAFKA_ENABLED:false}
+    topic-prefix: ${KAFKA_TOPIC_PREFIX:}
     topics:
       level-up: ${KAFKA_TOPIC_LEVEL_UP:engagement.gamification.level-up-v1}
       badge-earned: ${KAFKA_TOPIC_BADGE_EARNED:engagement.gamification.badge-earned-v1}

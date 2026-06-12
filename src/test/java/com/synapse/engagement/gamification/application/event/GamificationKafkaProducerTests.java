@@ -26,6 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(properties = {
         "synapse.kafka.enabled=true",
+        "synapse.kafka.topic-prefix=dev.",
         "spring.kafka.bootstrap-servers=${spring.embedded.kafka.brokers}",
         "spring.kafka.producer.properties.schema.registry.url=mock://gamification-step7",
         "synapse.kafka.topics.level-up=engagement.gamification.level-up-v1",
@@ -37,9 +38,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 @EmbeddedKafka(
         partitions = 1,
         topics = {
-                "engagement.gamification.level-up-v1",
-                "engagement.gamification.badge-earned-v1",
-                "platform.notification.notification-send-v1"
+                "dev.platform.auth.user-registered-v1",
+                "dev.learning.card.review-completed-v1",
+                "dev.engagement.gamification.level-up-v1",
+                "dev.engagement.gamification.badge-earned-v1",
+                "dev.platform.notification.notification-send-v1"
         }
 )
 class GamificationKafkaProducerTests {
@@ -65,9 +68,9 @@ class GamificationKafkaProducerTests {
         try (var consumer = consumerFactory.createConsumer()) {
             embeddedKafka.consumeFromEmbeddedTopics(
                     consumer,
-                    "engagement.gamification.level-up-v1",
-                    "engagement.gamification.badge-earned-v1",
-                    "platform.notification.notification-send-v1"
+                    "dev.engagement.gamification.level-up-v1",
+                    "dev.engagement.gamification.badge-earned-v1",
+                    "dev.platform.notification.notification-send-v1"
             );
 
             // outbound 이벤트는 platform UUID userId를 그대로 실어야 한다(F10): 내부 Long(80L)이 아니라 externalUserId.
@@ -87,11 +90,11 @@ class GamificationKafkaProducerTests {
 
             var levelUp = KafkaTestUtils.getSingleRecord(
                     consumer,
-                    "engagement.gamification.level-up-v1"
+                    "dev.engagement.gamification.level-up-v1"
             );
             var badgeEarned = KafkaTestUtils.getSingleRecord(
                     consumer,
-                    "engagement.gamification.badge-earned-v1"
+                    "dev.engagement.gamification.badge-earned-v1"
             );
 
             assertThat(levelUp.key()).isEqualTo(tenantId);
@@ -119,7 +122,7 @@ class GamificationKafkaProducerTests {
             // 레벨업 시 platform 알림 버스로 NotificationSend도 발행되어야 한다 (F10, W1 알림 leg).
             var notification = KafkaTestUtils.getSingleRecord(
                     consumer,
-                    "platform.notification.notification-send-v1"
+                    "dev.platform.notification.notification-send-v1"
             );
             assertThat(notification.key()).isEqualTo(tenantId);
             assertThat(notification.value()).isInstanceOf(NotificationSend.class);

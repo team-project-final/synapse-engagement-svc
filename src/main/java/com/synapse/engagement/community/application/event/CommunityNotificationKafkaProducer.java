@@ -1,8 +1,8 @@
 package com.synapse.engagement.community.application.event;
 
 import com.synapse.platform.NotificationSend;
+import com.synapse.engagement.shared.KafkaTopicResolver;
 import org.apache.avro.specific.SpecificRecord;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
@@ -20,9 +20,9 @@ public class CommunityNotificationKafkaProducer implements CommunityNotification
 
     public CommunityNotificationKafkaProducer(
             KafkaTemplate<String, SpecificRecord> kafkaTemplate,
-            @Value("${synapse.kafka.topics.notification-send}") String notificationSendTopic) {
+            KafkaTopicResolver kafkaTopicResolver) {
         this.kafkaTemplate = kafkaTemplate;
-        this.notificationSendTopic = notificationSendTopic;
+        this.notificationSendTopic = kafkaTopicResolver.notificationSend();
     }
 
     @Override
