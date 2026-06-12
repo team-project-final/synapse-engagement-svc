@@ -1,0 +1,32 @@
+# 프로젝트 지침: synapse-engagement-svc
+
+## 워크플로우 및 컨벤션
+
+- **초안 검토 필수:** 모든 코드 수정 작업을 수행하기 전에, 변경될 코드의 초안(Draft)을 반드시 사용자에게 보여주고 승인을 받아야 합니다. 큰 변경의 경우 `/plan` 모드를 활용하세요.
+- **작업 설명:** 모든 작업(구현, 수정 등)을 완료한 후에는 수행한 내용을 사용자가 쉽게 이해할 수 있도록 반드시 **한국어**로 상세히 설명합니다.
+- **진행 상황 기록:** 주요 구현 단계나 아키텍처 변경을 완료한 후, 반드시 Claude의 메모리 시스템(`C:\Users\G\.claude\projects\D--workspace-synapse-synapse-engagement-svc\memory\`)의 `MEMORY.md`를 업데이트하여 현재 상태, 완료된 작업 및 다음 단계를 기록합니다.
+- **보고서 작성:** 각 단계가 완료될 때마다 `REPORT.md`를 업데이트하여 구체적인 코드 변경 사항, 기술적 근거, 이전 상태와의 비교 내용을 상세히 기록합니다. 모든 기록에는 반드시 작업 일자(`YYYY-MM-DD`)를 포함합니다.
+- **문서 동기화 필수:** 모든 작업(구현, 수정, 리팩토링 등)이 완료된 후에는 반드시 `docs/project-management/` 폴더 내의 다음 문서들을 현재 상태에 맞게 갱신합니다.
+  - `HISTORY`: 작업 일자·완료 내용·다음 단계 기록
+  - `TASK`: 해당 Step Status를 DONE으로 변경
+  - `WORKFLOW`: 완료된 체크박스 `[x]` 처리 및 Step Status Done 표시
+  - `PRD`: 완료된 기능 요구사항(FR) 항목에 ✅ 표시, 성공 기준 체크리스트 `[x]` 처리
+  - `SCOPE`: 성공 기준 항목 `[x]` 처리
+
+## 브랜치 전략
+
+- **기능 개발 완료 이후(현재):** fix/hotfix 브랜치는 `main`에서 직접 생성한다. `git checkout -b fix/<name> main`
+- **PR 대상:** `fix/*` → `main` (dev 경유 금지). dev↔main 간 diverge 누적을 방지하기 위함.
+- **로컬 main 동기화:** 작업 시작 전 항상 `git pull origin main`으로 최신 상태 확인.
+
+## 설정 관리
+
+- 모든 환경 변수 및 애플리케이션 설정에는 Spring `@ConfigurationProperties`를 사용합니다.
+- 설정 클래스는 `src/main/java/.../config/` 패키지에 위치시킵니다.
+
+## 코딩 스타일
+
+- **언어:** Java 21 (Virtual Threads, Record, Sealed Class 등 최신 문법 적극 활용)
+- **아키텍처:** Spring Modulith 기반 모듈형 모놀리스 구조를 유지합니다.
+- **비동기:** I/O 바운드 작업에는 Virtual Threads 또는 `@Async`를 활용합니다.
+- **테스트:** JUnit 5 + Spring Boot Test를 사용합니다.

@@ -1,15 +1,19 @@
 package com.synapse.engagement.gamification.repository;
 
 import com.synapse.engagement.gamification.entity.UserProfilesGamification;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface UserProfilesGamificationRepository extends JpaRepository<UserProfilesGamification, UUID> {
 
     default Optional<UserProfilesGamification> findByUserId(UUID userId) {
-        // 이 테이블은 user_id가 곧 Primary Key라서 findById를 도메인 언어에 맞게 감싼 메서드입니다.
         return findById(userId);
     }
+
+    // Redis 장애 시 DB에서 직접 리더보드를 재구성하는 fallback 쿼리입니다.
+    List<UserProfilesGamification> findAllByOrderByTotalXpDesc(Pageable pageable);
 }
 

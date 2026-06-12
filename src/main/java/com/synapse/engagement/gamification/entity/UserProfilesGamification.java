@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
@@ -37,6 +38,9 @@ public class UserProfilesGamification {
 
     @Column(nullable = false, length = 100)
     private String title;
+
+    @Column(name = "last_activity_date")
+    private LocalDate lastActivityDate;
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
@@ -75,8 +79,32 @@ public class UserProfilesGamification {
         updatedAt = LocalDateTime.now();
     }
 
+    public void applyLevel(int newLevel, String newTitle) {
+        // LevelService가 level_definitions 기반으로 계산한 레벨/칭호를 적용합니다.
+        this.level = newLevel;
+        this.title = newTitle;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void updateStreak(LocalDate today) {
+        // KST 자정 기준으로 연속 학습일을 계산합니다.
+        // 같은 날 여러 번 XP를 받아도 스트릭은 1회만 증가합니다.
+        if (lastActivityDate == null || today.isAfter(lastActivityDate.plusDays(1))) {
+            currentStreak = 1;
+        } else if (today.equals(lastActivityDate.plusDays(1))) {
+            currentStreak++;
+        }
+        longestStreak = Math.max(longestStreak, currentStreak);
+        lastActivityDate = today;
+        updatedAt = LocalDateTime.now();
+    }
+
+    public LocalDate lastActivityDate() {
+        return lastActivityDate;
+    }
+
     public int nextLevelXp() {
-        // 현재 레벨에서 다음 레벨로 올라가기 위해 도달해야 하는 총 XP입니다.
+        // LevelService 미연동 시 fallback용 단순 계산입니다.
         return level * XP_PER_LEVEL;
     }
 
