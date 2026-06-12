@@ -112,6 +112,7 @@
 
 | 날짜 | 변경 사항 |
 |------|-----------|
+| 2026-06-12 | Step 6 완료 PM 문서 동기화 (HISTORY/TASK/WORKFLOW W3/PRD W3/SCOPE/REPORT) |
 | 2026-06-08 | W5 Step 13 커뮤니티 최종 E2E 테스트 추가 및 notification-send slice/contract 검증 완료 |
 | 2026-06-08 | W3 Step 7 notification 연동을 slice/contract 테스트 기준으로 완료 처리, 실제 Kafka ACL만 잔여 항목으로 분리 |
 | 2026-06-08 | W5 Step 12 게이미피케이션 로컬 최종 E2E 테스트 추가 및 notification slice/contract 검증 완료 |
