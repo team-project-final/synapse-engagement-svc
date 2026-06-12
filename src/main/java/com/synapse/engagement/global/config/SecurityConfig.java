@@ -6,9 +6,12 @@ import java.security.KeyPairGenerator;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.security.autoconfigure.actuate.web.servlet.EndpointRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -27,6 +30,18 @@ import org.springframework.util.StringUtils;
 public class SecurityConfig {
 
     @Bean
+    @Order(0)
+    SecurityFilterChain actuatorSecurityFilterChain(HttpSecurity http) throws Exception {
+        return http
+            .securityMatcher(SecurityConfig::isPublicActuatorRequest)
+            .csrf(AbstractHttpConfigurer::disable)
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+            .build();
+    }
+
+    @Bean
+    @Order(1)
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
             // REST API 서버라서 브라우저 세션/폼 기반 CSRF 보호는 사용하지 않는다.
@@ -40,7 +55,9 @@ public class SecurityConfig {
                 // 운영/문서 확인용 엔드포인트는 인증 없이 열어둔다.
                 // 쿠버네티스 프로브는 하위 경로(/actuator/health/liveness·/readiness)를 호출하므로
                 // 와일드카드로 열어 401 → livenessProbe 실패 → SIGTERM 재시작 루프를 막는다. (#43)
+                .requestMatchers(EndpointRequest.to("health", "info", "prometheus")).permitAll()
                 .requestMatchers("/actuator/health/**", "/actuator/info").permitAll()
+                .requestMatchers(SecurityConfig::isPublicActuatorRequest).permitAll()
                 .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
 
                 // 공유 토큰 조회와 커뮤니티 검색은 공개 기능이므로 GET만 인증 없이 허용한다.
@@ -56,6 +73,16 @@ public class SecurityConfig {
             // 검증에 성공하면 컨트롤러의 @AuthenticationPrincipal Jwt 파라미터로 주입된다.
             .oauth2ResourceServer(oauth -> oauth.jwt(Customizer.withDefaults()))
             .build();
+    }
+
+    private static boolean isPublicActuatorRequest(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        String contextPath = request.getContextPath();
+        if (StringUtils.hasText(contextPath) && path.startsWith(contextPath)) {
+            path = path.substring(contextPath.length());
+        }
+        return path.equals("/actuator/health") || path.startsWith("/actuator/health/")
+                || path.equals("/actuator/info") || path.equals("/actuator/prometheus");
     }
 
     @Bean
