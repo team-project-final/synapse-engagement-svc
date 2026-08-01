@@ -42,8 +42,12 @@ public class SharedContentController {
     }
 
     @GetMapping("/share/{token}")
-    public SharedContentResponse findByToken(@PathVariable String token) {
-        return sharedContentService.findByToken(token);
+    public SharedContentResponse findByToken(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable String token
+    ) {
+        // 공개 공유 링크는 익명 열람이 정상 경로이므로 require가 아니라 optional을 쓴다.
+        return sharedContentService.findByToken(token, CurrentUser.optional(jwt));
     }
 
     @GetMapping("/search")

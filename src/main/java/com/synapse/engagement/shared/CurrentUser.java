@@ -24,6 +24,17 @@ public final class CurrentUser {
     }
 
     /**
+     * permitAll 경로(공개 공유 링크 등)는 익명 요청이 정상이므로 JWT가 없어도 예외를 던지지 않는다.
+     * 호출자는 null을 "비로그인"으로 해석한다.
+     */
+    public static Long optional(Jwt jwt) {
+        if (jwt == null || jwt.getSubject() == null || jwt.getSubject().isBlank()) {
+            return null;
+        }
+        return resolveUserId(jwt.getSubject());
+    }
+
+    /**
      * JWT subject(platform UUID 문자열)를 그대로 반환한다.
      * 내부 PK(require)는 해시 Long을 쓰지만, outbound 이벤트에는 이 원본 subject(UUID)를 실어야
      * platform NotificationService의 UUID.fromString(userId)가 성공한다(F10).

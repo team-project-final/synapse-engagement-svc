@@ -3,6 +3,8 @@ package com.synapse.engagement.community.application;
 import com.synapse.engagement.community.domain.ContentType;
 import com.synapse.engagement.community.domain.ReportTargetType;
 import com.synapse.engagement.community.domain.SharedContent;
+import com.synapse.engagement.community.repository.GroupMemberRepository;
+import com.synapse.engagement.community.repository.GroupRepository;
 import com.synapse.engagement.community.repository.SharedContentRepository;
 import com.synapse.engagement.shared.NotFoundException;
 import org.junit.jupiter.api.Test;
@@ -17,7 +19,10 @@ import static org.mockito.Mockito.when;
 class SharedContentServiceOwnerTests {
 
     private final SharedContentRepository repo = mock(SharedContentRepository.class);
-    private final SharedContentService service = new SharedContentService(repo);
+    private final GroupRepository groupRepository = mock(GroupRepository.class);
+    private final GroupMemberRepository groupMemberRepository = mock(GroupMemberRepository.class);
+    private final SharedContentService service =
+            new SharedContentService(repo, groupRepository, groupMemberRepository);
 
     @Test
     void findOwnerIdReturnsOwnerOfSharedContent() {
