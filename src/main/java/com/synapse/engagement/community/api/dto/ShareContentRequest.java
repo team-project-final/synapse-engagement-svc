@@ -12,6 +12,8 @@ public record ShareContentRequest(
         @NotNull Long contentId,
         @NotBlank @Size(max = 200) String title,
         @Size(max = 1000) String description,
-        @Size(max = 10) List<@Size(max = 30) String> tags
+        @Size(max = 10) List<@Size(max = 30) String> tags,
+        // null이면 공개 공유(기존 동작), 값이 있으면 해당 그룹의 ACTIVE 멤버에게만 보인다.
+        Long groupId
 ) {
 }

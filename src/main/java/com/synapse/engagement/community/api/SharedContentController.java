@@ -42,8 +42,12 @@ public class SharedContentController {
     }
 
     @GetMapping("/share/{token}")
-    public SharedContentResponse findByToken(@PathVariable String token) {
-        return sharedContentService.findByToken(token);
+    public SharedContentResponse findByToken(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable String token
+    ) {
+        // 공개 공유 링크는 익명 열람이 정상 경로이므로 require가 아니라 optional을 쓴다.
+        return sharedContentService.findByToken(token, CurrentUser.optional(jwt));
     }
 
     @GetMapping("/search")
@@ -52,6 +56,18 @@ public class SharedContentController {
             @RequestParam(required = false) ContentType contentType
     ) {
         return sharedContentService.search(keyword, contentType);
+    }
+
+    // 멤버십 검증이 필요한 조회이므로 공개 /search와 분리해 그룹 서브리소스로 노출한다.
+    // (MemberController의 /groups/{groupId}/members 와 같은 라우트 패턴)
+    @GetMapping("/groups/{groupId}/shared-content")
+    public List<SharedContentResponse> searchInGroup(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable Long groupId,
+            @RequestParam(required = false, name = "q") String keyword,
+            @RequestParam(required = false) ContentType contentType
+    ) {
+        return sharedContentService.searchInGroup(groupId, CurrentUser.require(jwt), keyword, contentType);
     }
 
     @PostMapping("/share/{token}/fork")

@@ -18,7 +18,8 @@ public record SharedContentResponse(
         List<String> tags,
         long downloadCount,
         Long sourceShareId,
-        Instant createdAt
+        Instant createdAt,
+        Long groupId
 ) {
     public static SharedContentResponse from(SharedContent content) {
         return new SharedContentResponse(
@@ -32,7 +33,8 @@ public record SharedContentResponse(
                 splitTags(content.getTags()),
                 content.getDownloadCount(),
                 content.getSourceShareId(),
-                content.getCreatedAt()
+                content.getCreatedAt(),
+                content.getGroupId()
         );
     }
 
