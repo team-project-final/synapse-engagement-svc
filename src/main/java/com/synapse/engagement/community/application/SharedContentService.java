@@ -37,7 +37,8 @@ public class SharedContentService {
                 token,
                 request.title(),
                 request.description(),
-                joinTags(request.tags())
+                joinTags(request.tags()),
+                null
         ));
         return new ShareTokenResponse(content.getShareToken(), "/api/v1/community/share/" + content.getShareToken());
     }

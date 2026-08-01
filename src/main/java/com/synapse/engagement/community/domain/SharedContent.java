@@ -48,6 +48,9 @@ public class SharedContent {
     @Column(name = "source_share_id")
     private Long sourceShareId;
 
+    @Column(name = "group_id")
+    private Long groupId;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -68,7 +71,8 @@ public class SharedContent {
             String title,
             String description,
             String tags,
-            Long sourceShareId
+            Long sourceShareId,
+            Long groupId
     ) {
         this.ownerId = ownerId;
         this.contentType = contentType;
@@ -78,6 +82,7 @@ public class SharedContent {
         this.description = description;
         this.tags = tags;
         this.sourceShareId = sourceShareId;
+        this.groupId = groupId;
     }
 
     public static SharedContent create(
@@ -87,13 +92,16 @@ public class SharedContent {
             String shareToken,
             String title,
             String description,
-            String tags
+            String tags,
+            Long groupId
     ) {
-        return new SharedContent(ownerId, contentType, contentId, shareToken, title, description, tags, null);
+        return new SharedContent(ownerId, contentType, contentId, shareToken, title, description, tags, null, groupId);
     }
 
+    // fork는 "내 것으로 가져오기"이므로 그룹 스코프를 승계하지 않는다(마지막 인자 null).
+    // 승계하면 그룹을 나간 뒤 자기 사본에 접근하지 못하는 모순이 생긴다.
     public SharedContent fork(Long newOwnerId, String newToken) {
-        return new SharedContent(newOwnerId, contentType, contentId, newToken, title, description, tags, id);
+        return new SharedContent(newOwnerId, contentType, contentId, newToken, title, description, tags, id, null);
     }
 
     @PrePersist
@@ -158,6 +166,14 @@ public class SharedContent {
 
     public Long getSourceShareId() {
         return sourceShareId;
+    }
+
+    public Long getGroupId() {
+        return groupId;
+    }
+
+    public boolean isGroupScoped() {
+        return groupId != null;
     }
 
     public Instant getCreatedAt() {

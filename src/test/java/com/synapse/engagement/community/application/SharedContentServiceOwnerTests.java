@@ -21,7 +21,7 @@ class SharedContentServiceOwnerTests {
 
     @Test
     void findOwnerIdReturnsOwnerOfSharedContent() {
-        var content = SharedContent.create(99L, ContentType.NOTE, 1L, "tok", "title", null, "");
+        var content = SharedContent.create(99L, ContentType.NOTE, 1L, "tok", "title", null, "", null);
         when(repo.findByIdAndDeletedAtIsNull(10L)).thenReturn(Optional.of(content));
 
         Long ownerId = service.findOwnerId(ReportTargetType.SHARED_NOTE, 10L);
