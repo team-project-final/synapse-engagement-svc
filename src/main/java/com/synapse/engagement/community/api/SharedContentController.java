@@ -58,6 +58,18 @@ public class SharedContentController {
         return sharedContentService.search(keyword, contentType);
     }
 
+    // 멤버십 검증이 필요한 조회이므로 공개 /search와 분리해 그룹 서브리소스로 노출한다.
+    // (MemberController의 /groups/{groupId}/members 와 같은 라우트 패턴)
+    @GetMapping("/groups/{groupId}/shared-content")
+    public List<SharedContentResponse> searchInGroup(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable Long groupId,
+            @RequestParam(required = false, name = "q") String keyword,
+            @RequestParam(required = false) ContentType contentType
+    ) {
+        return sharedContentService.searchInGroup(groupId, CurrentUser.require(jwt), keyword, contentType);
+    }
+
     @PostMapping("/share/{token}/fork")
     @ResponseStatus(HttpStatus.CREATED)
     public SharedContentResponse fork(
