@@ -2,13 +2,16 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: synapse
+      # 서비스별 DB 분리(shared #75) 이후 application-dev.yml 기본 URL이
+      # jdbc:postgresql://localhost:5432/synapse_engagement 이므로 이름을 맞춘다.
+      # 예전 이름(synapse)으로 두면 부팅 시 Flyway가 "database does not exist"로 죽는다.
+      POSTGRES_DB: synapse_engagement
       POSTGRES_USER: synapse
       POSTGRES_PASSWORD: synapse_local_pw
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U synapse -d synapse"]
+      test: ["CMD-SHELL", "pg_isready -U synapse -d synapse_engagement"]
       interval: 5s
       timeout: 5s
       retries: 15
